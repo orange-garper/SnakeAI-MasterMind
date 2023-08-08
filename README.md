@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # SnakeAI-MasterMind
 
 ![SnakeAI-MasterMind Demo](docs/demo.gif)
