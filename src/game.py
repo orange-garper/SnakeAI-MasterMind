@@ -2,9 +2,11 @@ import pygame, sys
 from pygame.math import Vector2
 from random import randint
 
-CELL_SIZE, CELL_NUMBER = 40, 18
+CELL_SIZE, CELL_NUMBER = 20, 36
 FRUIT_COLOR = (251, 0, 13)
 SNAKE_COLOR = (20, 209, 0)
+OUTLINE_COLOR = (0, 0, 0)
+OUTLINE_WIDTH = 3
 DIRECTION = {
     "K_UP": Vector2(0, -1),
     "K_DOWN": Vector2(0, 1),
@@ -27,23 +29,22 @@ class Fruit:
 class Snake:
     
     def __init__(self, body = None):
-        self.body = body or [Vector2(10, 10), 
-                             Vector2(9, 10),
-                             Vector2(8, 10)]
-        self.direction = Vector2(1, 0)
+        self.body = body or [Vector2(10, 10),
+                             Vector2(9, 10)]
+        self.direction = Vector2(0, 0)
         self.grown = False
     
     def render(self):
         for element in self.body:
             sk_element = pygame.Rect(int(element.x * CELL_SIZE), int(element.y * CELL_SIZE),
-                            CELL_SIZE, CELL_SIZE)        
+                                        CELL_SIZE, CELL_SIZE)
             pygame.draw.rect(screen, SNAKE_COLOR, sk_element)
-    
     def move(self):
-        body = self.body[:-1] if not self.grown else self.body[:]
-        body.insert(0, body[0] + self.direction)
-        self.body = body[:]
-        if self.grown: self.grown = False
+        if self.direction != Vector2(0, 0):
+            body = self.body[:-1] if not self.grown else self.body[:]
+            body.insert(0, body[0] + self.direction)
+            self.body = body[:]
+            if self.grown: self.grown = False
     
     def add_element(self):
         self.grown = True
@@ -103,8 +104,11 @@ class Game:
         return False
 
     def game_over(self):
-        pygame.quit()
-        sys.exit
+        self.reset()
+    
+    def reset(self):
+        self.snake = Snake()
+        self.fruit = self._generate_fruit()
 
 pygame.init()
 screen = pygame.display.set_mode((CELL_SIZE * CELL_NUMBER, CELL_SIZE * CELL_NUMBER))
