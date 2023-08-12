@@ -79,7 +79,7 @@ class Snake:
         self.grown = True
     
     def get_coords(self, start_with = 0):
-        return [(element.x, element.y) for element in self.body[start_with:]]
+        return [(int(element.x), int(element.y)) for element in self.body[start_with:]]
 
 class Game:
 
@@ -91,11 +91,11 @@ class Game:
         self.snake.move()
         self.do_eat_fruit()
     
-    def change_direction(self, event_key):
-        vector = next((value for key, value in DIRECTION.items() \
-                          if all((getattr(pygame, key) == event_key, \
-                            self.snake.body[0] + value != self.snake.body[1]))), None)
-        if vector: self.snake.direction = vector
+    def change_direction(self, vector):
+        # vector = next((value for key, value in DIRECTION.items() \
+        #                   if all((getattr(pygame, key) == event_key, \
+        #                     self.snake.body[0] + value != self.snake.body[1]))), None)
+        if self.snake.body[0] + vector != self.snake.body[1]: self.snake.direction = vector
     
     def do_eat_fruit(self):
         if self.snake.body[0] == self.fruit.position:
