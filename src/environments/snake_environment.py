@@ -5,6 +5,9 @@ from game import CELL_NUMBER_H, CELL_NUMBER_W, CELL_SIZE, DIRECTION, SCREEN_UPDA
 import gymnasium as gym
 from gymnasium import spaces
 
+SCORE_CONST = 1000
+DEATH_FACTOR = 1
+
 def get_max_steps(ln_snake):
     return (CELL_NUMBER_W * CELL_NUMBER_H - (2 + ln_snake) / 2) * (ln_snake - 1)
 
@@ -69,13 +72,14 @@ class SnakeEnvironment(gym.Env):
 
         self._steps += 1
         self._score = self.game.get_len_snake()
+        self._do_hit = self.game.check_hit()
 
         terminated = self.game.check_hit() or self.game.do_win()
         
-        reward_for_grown = CELL_NUMBER_W * CELL_NUMBER_H * self.game.get_len_snake() if self.game.snake.grown else 0
+        reward_for_grown = CELL_NUMBER_W * CELL_NUMBER_H * self._score if self.game.snake.grown else 0
         reward_for_move = 1 if self._distance > self.game.distance() else -1
-        reward_for_win = (get_max_steps(self._score) / self._steps) * (CELL_NUMBER_H * CELL_NUMBER_W) * self._score / 1000 if terminated else 0
-        reward = sum((reward_for_grown, reward_for_move, reward_for_win))
+        reward_for_win = (get_max_steps(self._score) / self._steps) * (CELL_NUMBER_H * CELL_NUMBER_W) * (self._score) / SCORE_CONST if terminated else 0
+        reward = sum((reward_for_grown, reward_for_move, reward_for_win)) * (1 - self._do_hit * DEATH_FACTOR)
 
         observation = self._get_observation()
         info = self._get_info()
@@ -110,7 +114,6 @@ class SnakeEnvironment(gym.Env):
         if self.window is not None:
             pygame.display.quit()
             pygame.quit()
-
 g = Game()
 env = SnakeEnvironment(game=g, render_mode="human")
 episodes = 5
