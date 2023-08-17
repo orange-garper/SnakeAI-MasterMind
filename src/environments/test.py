@@ -1,4 +1,6 @@
-a = (1, 5)
+from stable_baselines3.common.env_checker import check_env
+from snake_environment import SnakeEnvironment
 
-if (0, 0) <= a <= (2, 2):
-    print(True)
+env = SnakeEnvironment(render_mode="human")
+
+check_env(env)

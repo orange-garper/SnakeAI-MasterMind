@@ -6,7 +6,7 @@ CELL_SIZE, CELL_NUMBER_H, CELL_NUMBER_W = 40, 18, 32
 FRUIT_COLOR = (251, 0, 13)
 SNAKE_COLOR = (20, 209, 0)
 OUTLINE_COLOR = (0, 0, 0)
-OUTLINE_WIDTH = 2
+OUTLINE_WIDTH = 1
 DIRECTION = {
     "K_UP": Vector2(0, -1),
     "K_DOWN": Vector2(0, 1),
@@ -116,7 +116,7 @@ class Game:
     def _generate_fruit(self):
         coords = self.snake.get_coords()
         free_cells = [(x, y) 
-                      for x, y in zip(range(0, CELL_NUMBER_W), range(0, CELL_NUMBER_H)) 
+                      for x in range(0, CELL_NUMBER_W) for y in range(0, CELL_NUMBER_H)
                       if (x, y) not in coords]
         return Fruit(*secrets.choice(free_cells))
     

@@ -5,31 +5,34 @@ from game import CELL_NUMBER_H, CELL_NUMBER_W, CELL_SIZE, DIRECTION, SCREEN_UPDA
 import gymnasium as gym
 from gymnasium import spaces
 
-SCORE_CONST = 1000
-DEATH_FACTOR = 1
+SCORE_CONST = 0.1
+DEATH_FACTOR = 0.1
+GROWN_CONST = 0.4
 
 def get_max_steps(ln_snake):
     return (CELL_NUMBER_W * CELL_NUMBER_H - (2 + ln_snake) / 2) * (ln_snake - 1)
 
 class SnakeEnvironment(gym.Env):
     metadata = {
-        "render_modes": ['human'],
+        "render_modes": ['human', 'rgb_array'],
         "render_fps": 60
     }
 
-    def __init__(self, game: Game, render_mode = None, clock = None):
+    def __init__(self, game: Game = None, render_mode = None, clock = None):
+        super(SnakeEnvironment, self).__init__()
 
         self.observation_space = spaces.Box(
-            low = np.zeros((CELL_NUMBER_W, CELL_NUMBER_H)),
-            high = np.full((CELL_NUMBER_W, CELL_NUMBER_H), 2),
-            shape = (CELL_NUMBER_W, CELL_NUMBER_H)
+            low = np.zeros((CELL_NUMBER_W, CELL_NUMBER_H, 3)),
+            high = np.full((CELL_NUMBER_W, CELL_NUMBER_H, 3), 1),
+            shape = (CELL_NUMBER_W, CELL_NUMBER_H, 3),
+            dtype=np.float32
         )
 
         self.action_space = spaces.Discrete(4)
 
         self._action_to_direction = [move for move in DIRECTION.values()]
 
-        self.game = game
+        self.game = game or Game()
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
@@ -37,13 +40,14 @@ class SnakeEnvironment(gym.Env):
         self.window = None
     
     def _get_observation(self):
-        _obs = np.zeros((CELL_NUMBER_W, CELL_NUMBER_H))
+        _obs = np.zeros((CELL_NUMBER_W, CELL_NUMBER_H, 3), dtype=np.float32)
 
-        _obs[self.game.fruit.x, self.game.fruit.y] = 2
+        _obs[self.game.fruit.x, self.game.fruit.y, 2] = 1
 
         for point in self.game.snake.get_coords():
             if 0 <= point[0] <= CELL_NUMBER_W - 1 and 0 <= point[1] <= CELL_NUMBER_H - 1:
-                _obs[int(point[0]), int(point[1])] = 1
+                _ = point == (self.game.snake.body[0].x, self.game.snake.body[0].y)
+                _obs[int(point[0]), int(point[1]), _] = 1
 
         return _obs
     
@@ -53,15 +57,17 @@ class SnakeEnvironment(gym.Env):
         )
     
     def reset(self, seed = None, options = None):
-        super().reset(seed=seed)
+        super().reset(seed=seed, options=options)
 
         self.game.reset()
         self._distance = self.game.distance()
         self._steps = 0
-        observation, info = self._get_observation, self._get_info
+        self._score = 0
+
+        observation, info = self._get_observation(), self._get_info()
 
         if self.render_mode == "human":
-            self.render()
+            self._render_frame()
         
         return observation, info
 
@@ -72,24 +78,23 @@ class SnakeEnvironment(gym.Env):
 
         self._steps += 1
         self._score = self.game.get_len_snake()
-        self._do_hit = self.game.check_hit()
+        self._distance = self.game.distance()
 
         terminated = self.game.check_hit() or self.game.do_win()
-        
-        reward_for_grown = CELL_NUMBER_W * CELL_NUMBER_H * self._score if self.game.snake.grown else 0
-        reward_for_move = 1 if self._distance > self.game.distance() else -1
-        reward_for_win = (get_max_steps(self._score) / self._steps) * (CELL_NUMBER_H * CELL_NUMBER_W) * (self._score) / SCORE_CONST if terminated else 0
-        reward = sum((reward_for_grown, reward_for_move, reward_for_win)) * (1 - self._do_hit * DEATH_FACTOR)
+        reward = 5
 
         observation = self._get_observation()
         info = self._get_info()
 
         if self.render_mode == "human":
-            self.render()
+            self._render_frame()
 
-        return observation, reward, terminated, info
-
+        return observation, reward, terminated, False, info
+    
     def render(self):
+        return self._render_frame()
+
+    def _render_frame(self):
         if self.window is None and self.render_mode == "human":
             pygame.init()
             pygame.display.init()
@@ -97,35 +102,20 @@ class SnakeEnvironment(gym.Env):
         
         if self.clock is None or self.render_mode == "human":
             self.clock = pygame.time.Clock()
-        
-        pygame.time.set_timer(SCREEN_UPDATE, 150)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit
+        
+        if self.render_mode == "human":
+            self.window.fill((0, 0, 0))
+            self.game.render(self.window)
+            pygame.display.update()
 
-        self.window.fill((0, 0, 0))
-        self.game.render(self.window)
-        pygame.display.update()
-        self.clock.tick(self.metadata["render_fps"])
+            self.clock.tick(self.metadata["render_fps"])
     
     def close(self):
         if self.window is not None:
             pygame.display.quit()
             pygame.quit()
-g = Game()
-env = SnakeEnvironment(game=g, render_mode="human")
-episodes = 5
-for episode in range(episodes):
-    state = env.reset()
-    done = False
-    score = 0
-
-    while not done:
-        env.render()
-        action = env.action_space.sample()
-        n_state, reward, done, info = env.step(action)
-        score +=reward
-    print(f"Episodes: {episode}, Score: {score}", info)
-env.close()
