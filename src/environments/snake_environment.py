@@ -1,36 +1,37 @@
 import numpy as np
 import pygame, sys
-from game import CELL_NUMBER_H, CELL_NUMBER_W, CELL_SIZE, DIRECTION, SCREEN_UPDATE, Game
+from environments.game import CELL_NUMBER_H, CELL_NUMBER_W, CELL_SIZE, DIRECTION, SCREEN_UPDATE, Game
 
 import gymnasium as gym
 from gymnasium import spaces
 
-SCORE_CONST = 0.1
-DEATH_FACTOR = 0.1
-GROWN_CONST = 0.4
+WIN_FACTOR = 100
+DEATH_FACTOR = 1
+GROWN_FACTOR = 0.1
+STUPID_DEATH_FACTOR = 2
 
 def get_max_steps(ln_snake):
     return (CELL_NUMBER_W * CELL_NUMBER_H - (2 + ln_snake) / 2) * (ln_snake - 1)
 
 class SnakeEnvironment(gym.Env):
     metadata = {
-        "render_modes": ['human', 'rgb_array'],
+        "render_modes": ['human', 'human_controlling'],
         "render_fps": 60
     }
 
-    def __init__(self, game: Game = None, render_mode = None, clock = None):
+    def __init__(self, game: Game = None, render_mode = None, clock = None, ep_length = float('inf')):
         super(SnakeEnvironment, self).__init__()
 
         self.observation_space = spaces.Box(
             low = np.zeros((CELL_NUMBER_W, CELL_NUMBER_H, 3)),
             high = np.full((CELL_NUMBER_W, CELL_NUMBER_H, 3), 1),
             shape = (CELL_NUMBER_W, CELL_NUMBER_H, 3),
-            dtype=np.float32
+            dtype=np.float64
         )
-
         self.action_space = spaces.Discrete(4)
 
         self._action_to_direction = [move for move in DIRECTION.values()]
+        self.ep_length = ep_length
 
         self.game = game or Game()
 
@@ -40,7 +41,7 @@ class SnakeEnvironment(gym.Env):
         self.window = None
     
     def _get_observation(self):
-        _obs = np.zeros((CELL_NUMBER_W, CELL_NUMBER_H, 3), dtype=np.float32)
+        _obs = np.zeros((CELL_NUMBER_W, CELL_NUMBER_H, 3), dtype=np.float64)
 
         _obs[self.game.fruit.x, self.game.fruit.y, 2] = 1
 
@@ -63,6 +64,7 @@ class SnakeEnvironment(gym.Env):
         self._distance = self.game.distance()
         self._steps = 0
         self._score = 0
+        self._mistakes = 0
 
         observation, info = self._get_observation(), self._get_info()
 
@@ -72,24 +74,51 @@ class SnakeEnvironment(gym.Env):
         return observation, info
 
     def step(self, action):
+        reward = 0
+        terminated = False
+        self._mistakes = 0 if self.game.snake.grown else self._mistakes
+
         direction = self._action_to_direction[action]
-        self.game.change_direction(direction)
+        if self.game.snake.direction != self._action_to_direction[(action + 2) % 4]:
+            self.game.change_direction(direction)
+        else: 
+            terminated = True
+            # reward -= CELL_NUMBER_H*CELL_NUMBER_W*(2 + self._score)*(self._score - 1)*STUPID_DEATH_FACTOR/2
+            reward -= 1
         self.game.update()
 
         self._steps += 1
         self._score = self.game.get_len_snake()
-        self._distance = self.game.distance()
+        self._mistakes += (0, 1)[self.game.do_stupid_snake]
 
-        terminated = self.game.check_hit() or self.game.do_win()
-        reward = 5
-
+        terminated = any((self.game.check_hit(), 
+                         self.game.do_win(), 
+                         self._steps > get_max_steps(self._score),
+                         terminated,
+                         self._mistakes > 9))
+        reward += + (0.1, -0.1)[self._distance < self.game.distance()]\
+                  + (0, 1)[self.game.snake.grown]\
+                  + (0, -1)[self.game.check_hit()]\
+                  + (0, -1)[self._steps > get_max_steps(self._score)]\
+                  + (0, -0.5)[self.game.do_stupid_snake]
+                #  + (0, CELL_NUMBER_H*CELL_NUMBER_W*self._score*GROWN_FACTOR)[self.game.snake.grown]\
+                #  - (0, CELL_NUMBER_H*CELL_NUMBER_W*(2 + self._score)*(self._score - 1)*\
+                # DEATH_FACTOR/2)[self.game.check_hit()]\
+                #  - (0, CELL_NUMBER_H*CELL_NUMBER_W*(2 + self._score)*(self._score - 1)*\
+                # STUPID_DEATH_FACTOR/2)[self._steps > get_max_steps(self._score)]\
+                #  + (0, (get_max_steps(self._score)/self._steps)*CELL_NUMBER_H* \
+                #  CELL_NUMBER_W*self._score*WIN_FACTOR)[self.game.do_win()]\
+                #  - (0, self._mistakes ** self._mistakes)[self.game.do_stupid_snake]
         observation = self._get_observation()
         info = self._get_info()
+        truncated = self._steps > self.ep_length
+
+        self._distance = self.game.distance()
 
         if self.render_mode == "human":
             self._render_frame()
 
-        return observation, reward, terminated, False, info
+        return observation, reward, terminated, truncated, info
     
     def render(self):
         return self._render_frame()

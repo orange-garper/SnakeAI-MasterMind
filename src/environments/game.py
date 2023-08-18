@@ -9,11 +9,18 @@ OUTLINE_COLOR = (0, 0, 0)
 OUTLINE_WIDTH = 1
 DIRECTION = {
     "K_UP": Vector2(0, -1),
-    "K_DOWN": Vector2(0, 1),
     "K_RIGHT": Vector2(1, 0),
+    "K_DOWN": Vector2(0, 1),
     "K_LEFT": Vector2(-1, 0)
 }
 SCREEN_UPDATE = pygame.USEREVENT
+
+class SettableVector2(Vector2):
+    def __init__(self, *args,**kwargs):
+        super().__init__(*args, **kwargs)
+    
+    def __hash__(self) -> int:
+        return hash((self.x, self.y))
 
 class Fruit:
     def __init__(self, x, y):
@@ -73,7 +80,9 @@ class Snake:
             body = self.body[:-1] if not self.grown else self.body[:]
             body.insert(0, body[0] + self.direction)
             self.body = body[:]
-            if self.grown: self.grown = False
+
+            if self.grown: 
+                self.grown = False
     
     def add_element(self):
         self.grown = True
@@ -86,16 +95,23 @@ class Game:
     def __init__(self):
         self.snake = Snake()
         self.fruit = self._generate_fruit()
+        self.saved_cells = set()
     
     def update(self):
         self.snake.move()
+        self.saved_cells.add(SettableVector2(self.snake.body[1]))
         self.do_eat_fruit()
+    
+    @property
+    def do_stupid_snake(self):
+        if self.snake.grown: self.saved_cells = set()
+        return SettableVector2(self.snake.body[0]) in self.saved_cells
     
     def change_direction(self, vector):
         # vector = next((value for key, value in DIRECTION.items() \
         #                   if all((getattr(pygame, key) == event_key, \
         #                     self.snake.body[0] + value != self.snake.body[1]))), None)
-        if self.snake.body[0] + vector != self.snake.body[1]: self.snake.direction = vector
+        self.snake.direction = vector
     
     def do_eat_fruit(self):
         if self.snake.body[0] == self.fruit.position:
@@ -154,3 +170,4 @@ class Game:
     def reset(self):
         self.snake = Snake()
         self.fruit = self._generate_fruit()
+        self.saved_cells = set()

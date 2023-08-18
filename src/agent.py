@@ -1,19 +1,23 @@
 import os
 import numpy as np
 from environments.snake_environment import SnakeEnvironment
+from gymnasium.wrappers import NormalizeObservation, NormalizeReward
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
-from stable_baselines3.ppo import MlpPolicy
+from stable_baselines3.ppo import MlpPolicy, CnnPolicy
 from stable_baselines3.common.evaluation import evaluate_policy
+from stable_baselines3.common.monitor import Monitor
+from stable_baselines3.common.callbacks import CheckpointCallback
 
 log_path = os.path.join('logs')
 ppo_path = os.path.join("models", "Snake-PPO-model")
+savepoint_path = os.path.join("models", "Snake-PPO-model-SP")
 
 mean_rewards_history = []
 
-env = DummyVecEnv([lambda: SnakeEnvironment()])
-
-eval_env = SnakeEnvironment(render_mode="human")
+wrapping_env = lambda cls, **kwargs: cls(**kwargs)
+env = DummyVecEnv([lambda: wrapping_env(SnakeEnvironment)])
+eval_env = Monitor(NormalizeReward(NormalizeObservation(SnakeEnvironment(render_mode="human"))))
 
 learning_rate = 0.0005
 n_steps = 256
@@ -37,16 +41,25 @@ model = PPO(
     clip_range=clip_range,
     n_epochs=n_epochs,
     batch_size=batch_size,
+    tensorboard_log=log_path
 )
 
-total_timesteps = 10_000
+checkpoint_callback = CheckpointCallback(
+    save_freq=10000,
+    save_path=savepoint_path,
+    name_prefix="rl_model",
+    save_replay_buffer=True,
+    save_vecnormalize=True,
+)
+
+total_timesteps = 1_000_000
 log_interval = 10_000
 
 for timestep in range(0, total_timesteps, log_interval):
     print(f"Training for {log_interval} timesteps")
-    model.learn(total_timesteps=log_interval)
+    model.learn(total_timesteps=log_interval, callback=checkpoint_callback)
     print("Evaluating model")
-    mean_reward, std_reward = evaluate_policy(model, eval_env, n_eval_episodes=10, render =  True)
+    mean_reward, std_reward = evaluate_policy(model, eval_env, n_eval_episodes=10, render=True)
     print(f"Timestep: {timestep}, Mean reward: {mean_reward} +/- {std_reward}")
 
     # Update the plot
