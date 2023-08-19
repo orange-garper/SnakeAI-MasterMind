@@ -23,9 +23,9 @@ class SnakeEnvironment(gym.Env):
         super(SnakeEnvironment, self).__init__()
 
         self.observation_space = spaces.Box(
-            low = np.zeros((CELL_NUMBER_W, CELL_NUMBER_H, 3)),
-            high = np.full((CELL_NUMBER_W, CELL_NUMBER_H, 3), 1),
-            shape = (CELL_NUMBER_W, CELL_NUMBER_H, 3),
+            low = 0,
+            high = max((CELL_NUMBER_H, CELL_NUMBER_W)),
+            shape = (CELL_NUMBER_W, CELL_NUMBER_H, 5),
             dtype=np.float64
         )
         self.action_space = spaces.Discrete(4)
@@ -41,14 +41,19 @@ class SnakeEnvironment(gym.Env):
         self.window = None
     
     def _get_observation(self):
-        _obs = np.zeros((CELL_NUMBER_W, CELL_NUMBER_H, 3), dtype=np.float64)
 
-        _obs[self.game.fruit.x, self.game.fruit.y, 2] = 1
+        coordinates = np.array(np.meshgrid(np.arange(CELL_NUMBER_W), np.arange(CELL_NUMBER_H))).T.reshape(-1, 2)
+        coordinates_with_zeros = np.hstack((coordinates, np.zeros((coordinates.shape[0], 3), dtype=int)))
+        _obs = coordinates_with_zeros.reshape(CELL_NUMBER_W, CELL_NUMBER_H, 5)
 
+        # Fruit coords
+        _obs[self.game.fruit.x, self.game.fruit.y, 4] = 1
+
+        #Snake coords
         for point in self.game.snake.get_coords():
             if 0 <= point[0] <= CELL_NUMBER_W - 1 and 0 <= point[1] <= CELL_NUMBER_H - 1:
                 _ = point == (self.game.snake.body[0].x, self.game.snake.body[0].y)
-                _obs[int(point[0]), int(point[1]), _] = 1
+                _obs[int(point[0]), int(point[1]), _+2] = 1
 
         return _obs
     
@@ -82,9 +87,9 @@ class SnakeEnvironment(gym.Env):
         if self.game.snake.direction != self._action_to_direction[(action + 2) % 4]:
             self.game.change_direction(direction)
         else: 
-            terminated = True
             # reward -= CELL_NUMBER_H*CELL_NUMBER_W*(2 + self._score)*(self._score - 1)*STUPID_DEATH_FACTOR/2
-            reward -= 1
+            reward -= 1000
+            terminated = True
         self.game.update()
 
         self._steps += 1
@@ -96,11 +101,11 @@ class SnakeEnvironment(gym.Env):
                          self._steps > get_max_steps(self._score),
                          terminated,
                          self._mistakes > 9))
-        reward += + (0.1, -0.1)[self._distance < self.game.distance()]\
-                  + (0, 1)[self.game.snake.grown]\
-                  + (0, -1)[self.game.check_hit()]\
-                  + (0, -1)[self._steps > get_max_steps(self._score)]\
-                  + (0, -0.5)[self.game.do_stupid_snake]
+        reward += + (-1, -1)[self._distance < self.game.distance()]\
+                  + (0, 500)[self.game.snake.grown]\
+                  + (0, -1000)[self.game.check_hit()]\
+                  + (0, -1000)[self._steps > get_max_steps(self._score)]\
+                  + (0, -100)[self.game.do_stupid_snake]
                 #  + (0, CELL_NUMBER_H*CELL_NUMBER_W*self._score*GROWN_FACTOR)[self.game.snake.grown]\
                 #  - (0, CELL_NUMBER_H*CELL_NUMBER_W*(2 + self._score)*(self._score - 1)*\
                 # DEATH_FACTOR/2)[self.game.check_hit()]\

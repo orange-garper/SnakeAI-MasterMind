@@ -17,7 +17,7 @@ mean_rewards_history = []
 
 wrapping_env = lambda cls, **kwargs: cls(**kwargs)
 env = DummyVecEnv([lambda: wrapping_env(SnakeEnvironment)])
-eval_env = Monitor(NormalizeReward(NormalizeObservation(SnakeEnvironment(render_mode="human"))))
+eval_env = Monitor(SnakeEnvironment(render_mode="human"))
 
 learning_rate = 0.0005
 n_steps = 256
@@ -45,15 +45,15 @@ model = PPO(
 )
 
 checkpoint_callback = CheckpointCallback(
-    save_freq=10000,
+    save_freq=20480,
     save_path=savepoint_path,
     name_prefix="rl_model",
     save_replay_buffer=True,
     save_vecnormalize=True,
 )
 
-total_timesteps = 1_000_000
-log_interval = 10_000
+total_timesteps = 10_000_000
+log_interval = 20_480
 
 for timestep in range(0, total_timesteps, log_interval):
     print(f"Training for {log_interval} timesteps")

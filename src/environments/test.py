@@ -4,7 +4,7 @@ from snake_environment import SnakeEnvironment
 from game import DIRECTION
 import pygame
 
-env = NormalizeReward(NormalizeObservation(SnakeEnvironment(render_mode="human")))
+env = SnakeEnvironment(render_mode="human")
 
 obs, info = env.reset()
 while True:
@@ -16,5 +16,5 @@ while True:
                           if getattr(pygame, key) == event.key), None)
             if action is not None:
                 obs, reward, terminated, truncated, info = env.step(action)
-                print(reward, terminated)
+                print(obs)
                 if terminated: env.reset()
