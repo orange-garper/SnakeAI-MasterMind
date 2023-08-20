@@ -101,11 +101,11 @@ class SnakeEnvironment(gym.Env):
                          self._steps > get_max_steps(self._score),
                          terminated,
                          self._mistakes > 9))
-        reward += + (-0.1, 0.1)[self._distance < self.game.distance()]\
+        reward += + (0.1, -0.1)[self._distance < self.game.distance()]\
                   + (0, 10)[self.game.snake.grown]\
                   + (0, -10)[self.game.check_hit()]\
                   + (0, -10)[self._steps > get_max_steps(self._score)]\
-                  + (0, -10)[self.game.do_stupid_snake]
+                  + (0, -0.5)[self.game.do_stupid_snake]
                 #  + (0, CELL_NUMBER_H*CELL_NUMBER_W*self._score*GROWN_FACTOR)[self.game.snake.grown]\
                 #  - (0, CELL_NUMBER_H*CELL_NUMBER_W*(2 + self._score)*(self._score - 1)*\
                 # DEATH_FACTOR/2)[self.game.check_hit()]\
