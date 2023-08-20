@@ -27,7 +27,7 @@ class SnakeEnvironment(gym.Env):
         self.observation_space = spaces.Box(
             low = 0,
             high = max((CELL_NUMBER_H, CELL_NUMBER_W)) + 1,
-            shape = (CELL_NUMBER_H, CELL_NUMBER_W, 5),
+            shape = (CELL_NUMBER_H, CELL_NUMBER_W, 3),
             dtype=np.float64
         )
         self.action_space = spaces.Discrete(4)
@@ -45,17 +45,17 @@ class SnakeEnvironment(gym.Env):
     def _get_observation(self):
 
         coordinates = np.array(np.meshgrid(np.arange(CELL_NUMBER_H), np.arange(CELL_NUMBER_W))).T.reshape(-1, 2)
-        coordinates_with_zeros = np.hstack((coordinates, np.zeros((coordinates.shape[0], 3), dtype=int)))
-        _obs = coordinates_with_zeros.reshape(CELL_NUMBER_H, CELL_NUMBER_W, 5)
+        coordinates_with_zeros = np.hstack((coordinates, np.zeros((coordinates.shape[0], 1), dtype=int)))
+        _obs = coordinates_with_zeros.reshape(CELL_NUMBER_H, CELL_NUMBER_W, 3)
 
         # Fruit coords
-        _obs[self.game.fruit.y, self.game.fruit.x, 4] = 1
+        _obs[self.game.fruit.y, self.game.fruit.x, 2] = 3
 
         #Snake coords
-        for point in self.game.snake.get_coords():
+        for point in self.game.snake.get_cosssssords():
             if 0 <= point[0] <= CELL_NUMBER_W - 1 and 0 <= point[1] <= CELL_NUMBER_H - 1:
                 _ = point == (self.game.snake.body[0].x, self.game.snake.body[0].y)
-                _obs[int(point[1]), int(point[0]), _+2] = 1
+                _obs[int(point[1]), int(point[0]), 2] = _+1
 
         return _obs
     
