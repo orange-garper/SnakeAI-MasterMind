@@ -7,7 +7,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.ppo import MlpPolicy, CnnPolicy
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
-from stable_baselines3.common.callbacks import CheckpointCallback
+from stable_baselines3.common.callbacks import CheckpointCallback, StopTrainingOnRewardThreshold, EvalCallback
 
 log_path = os.path.join('logs')
 ppo_path = os.path.join("models", "Snake-PPO-model")
@@ -52,8 +52,19 @@ checkpoint_callback = CheckpointCallback(
     save_vecnormalize=True,
 )
 
+callback_on_best = StopTrainingOnRewardThreshold(
+    reward_threshold=10, 
+    verbose=1)
+
+eval_callback = EvalCallback(
+    eval_env, 
+    callback_on_new_best=callback_on_best, 
+    verbose=1,
+    log_path=savepoint_path
+)
+
 total_timesteps = 10_000_000
-log_interval = 20_480
+log_interval = 10_000
 
 for timestep in range(0, total_timesteps, log_interval):
     print(f"Training for {log_interval} timesteps")

@@ -88,7 +88,7 @@ class SnakeEnvironment(gym.Env):
             self.game.change_direction(direction)
         else: 
             # reward -= CELL_NUMBER_H*CELL_NUMBER_W*(2 + self._score)*(self._score - 1)*STUPID_DEATH_FACTOR/2
-            reward -= 1000
+            reward -= 10
             terminated = True
         self.game.update()
 
@@ -101,11 +101,11 @@ class SnakeEnvironment(gym.Env):
                          self._steps > get_max_steps(self._score),
                          terminated,
                          self._mistakes > 9))
-        reward += + (-1, -1)[self._distance < self.game.distance()]\
-                  + (0, 500)[self.game.snake.grown]\
-                  + (0, -1000)[self.game.check_hit()]\
-                  + (0, -1000)[self._steps > get_max_steps(self._score)]\
-                  + (0, -100)[self.game.do_stupid_snake]
+        reward += + (-0.1, 0.1)[self._distance < self.game.distance()]\
+                  + (0, 10)[self.game.snake.grown]\
+                  + (0, -10)[self.game.check_hit()]\
+                  + (0, -10)[self._steps > get_max_steps(self._score)]\
+                  + (0, -10)[self.game.do_stupid_snake]
                 #  + (0, CELL_NUMBER_H*CELL_NUMBER_W*self._score*GROWN_FACTOR)[self.game.snake.grown]\
                 #  - (0, CELL_NUMBER_H*CELL_NUMBER_W*(2 + self._score)*(self._score - 1)*\
                 # DEATH_FACTOR/2)[self.game.check_hit()]\
