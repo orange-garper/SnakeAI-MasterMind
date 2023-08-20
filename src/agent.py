@@ -20,7 +20,7 @@ env = DummyVecEnv([lambda: wrapping_env(SnakeEnvironment)])
 eval_env = Monitor(SnakeEnvironment(render_mode="human"))
 
 learning_rate = 0.0005
-n_steps = 256
+n_steps = 1024
 gae_lambda = 0.95
 gamma = 0.99
 ent_coef = 0.01
@@ -45,7 +45,7 @@ model = PPO(
 )
 
 checkpoint_callback = CheckpointCallback(
-    save_freq=20480,
+    save_freq=102400,
     save_path=savepoint_path,
     name_prefix="rl_model",
     save_replay_buffer=True,
@@ -64,7 +64,7 @@ eval_callback = EvalCallback(
 )
 
 total_timesteps = 10_000_000
-log_interval = 10_000
+log_interval = 102_400
 
 for timestep in range(0, total_timesteps, log_interval):
     print(f"Training for {log_interval} timesteps")

@@ -10,6 +10,8 @@ DEATH_FACTOR = 1
 GROWN_FACTOR = 0.1
 STUPID_DEATH_FACTOR = 2
 
+np.set_printoptions(threshold=sys.maxsize)
+
 def get_max_steps(ln_snake):
     return (CELL_NUMBER_W * CELL_NUMBER_H - (2 + ln_snake) / 2) * (ln_snake - 1)
 
@@ -24,8 +26,8 @@ class SnakeEnvironment(gym.Env):
 
         self.observation_space = spaces.Box(
             low = 0,
-            high = max((CELL_NUMBER_H, CELL_NUMBER_W)),
-            shape = (CELL_NUMBER_W, CELL_NUMBER_H, 5),
+            high = max((CELL_NUMBER_H, CELL_NUMBER_W)) + 1,
+            shape = (CELL_NUMBER_H, CELL_NUMBER_W, 5),
             dtype=np.float64
         )
         self.action_space = spaces.Discrete(4)
@@ -42,18 +44,18 @@ class SnakeEnvironment(gym.Env):
     
     def _get_observation(self):
 
-        coordinates = np.array(np.meshgrid(np.arange(CELL_NUMBER_W), np.arange(CELL_NUMBER_H))).T.reshape(-1, 2)
+        coordinates = np.array(np.meshgrid(np.arange(CELL_NUMBER_H), np.arange(CELL_NUMBER_W))).T.reshape(-1, 2)
         coordinates_with_zeros = np.hstack((coordinates, np.zeros((coordinates.shape[0], 3), dtype=int)))
-        _obs = coordinates_with_zeros.reshape(CELL_NUMBER_W, CELL_NUMBER_H, 5)
+        _obs = coordinates_with_zeros.reshape(CELL_NUMBER_H, CELL_NUMBER_W, 5)
 
         # Fruit coords
-        _obs[self.game.fruit.x, self.game.fruit.y, 4] = 1
+        _obs[self.game.fruit.y, self.game.fruit.x, 4] = 1
 
         #Snake coords
         for point in self.game.snake.get_coords():
             if 0 <= point[0] <= CELL_NUMBER_W - 1 and 0 <= point[1] <= CELL_NUMBER_H - 1:
                 _ = point == (self.game.snake.body[0].x, self.game.snake.body[0].y)
-                _obs[int(point[0]), int(point[1]), _+2] = 1
+                _obs[int(point[1]), int(point[0]), _+2] = 1
 
         return _obs
     
@@ -114,6 +116,7 @@ class SnakeEnvironment(gym.Env):
                 #  + (0, (get_max_steps(self._score)/self._steps)*CELL_NUMBER_H* \
                 #  CELL_NUMBER_W*self._score*WIN_FACTOR)[self.game.do_win()]\
                 #  - (0, self._mistakes ** self._mistakes)[self.game.do_stupid_snake]
+        
         observation = self._get_observation()
         info = self._get_info()
         truncated = self._steps > self.ep_length
