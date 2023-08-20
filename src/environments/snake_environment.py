@@ -103,7 +103,7 @@ class SnakeEnvironment(gym.Env):
                          self._steps > get_max_steps(self._score),
                          terminated,
                          self._mistakes > 9))
-        reward += + (0.1, -0.1)[self._distance < self.game.distance()]\
+        reward += + (-0.1, -0.1)[self._distance < self.game.distance()]\
                   + (0, 10)[self.game.snake.grown]\
                   + (0, -10)[self.game.check_hit()]\
                   + (0, -10)[self._steps > get_max_steps(self._score)]\

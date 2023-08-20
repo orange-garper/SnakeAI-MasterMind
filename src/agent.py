@@ -79,5 +79,5 @@ for timestep in range(0, total_timesteps, log_interval):
 model.save(ppo_path)
 
 print("Evaluating final model")
-mean_reward, std_reward = evaluate_policy(model, eval_env, n_eval_episodes=10, render = True)
+mean_reward, std_reward = evaluate_policy(model, eval_env, n_eval_episodes=100, render = True)
 print(f"Final Mean reward: {mean_reward} +/- {std_reward}")
