@@ -52,7 +52,7 @@ class SnakeEnvironment(gym.Env):
         _obs[self.game.fruit.y, self.game.fruit.x, 2] = 3
 
         #Snake coords
-        for point in self.game.snake.get_cosssssords():
+        for point in self.game.snake.get_coords():
             if 0 <= point[0] <= CELL_NUMBER_W - 1 and 0 <= point[1] <= CELL_NUMBER_H - 1:
                 _ = point == (self.game.snake.body[0].x, self.game.snake.body[0].y)
                 _obs[int(point[1]), int(point[0]), 2] = _+1
