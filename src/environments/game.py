@@ -95,13 +95,13 @@ class Game:
     def __init__(self):
         self.snake = Snake()
         self.fruit = self._generate_fruit()
-        self.saved_cells = set(SettableVector2(self.snake.body[1]))
+        self.saved_cells = set([SettableVector2(self.snake.body[1])])
     
     def update(self):
         self.snake.move()
         self.saved_cells.add(SettableVector2(self.snake.body[1]))
         self.do_eat_fruit()
-        if self.snake.grown: self.saved_cells = set(SettableVector2(self.snake.body[1]))
+        if self.snake.grown: self.saved_cells = set([SettableVector2(self.snake.body[1])])
     
     @property
     def do_stupid_snake(self):
@@ -170,4 +170,4 @@ class Game:
     def reset(self):
         self.snake = Snake()
         self.fruit = self._generate_fruit()
-        self.saved_cells = set(SettableVector2(self.snake.body[1]))
+        self.saved_cells = set([SettableVector2(self.snake.body[1])])

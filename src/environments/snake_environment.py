@@ -33,15 +33,15 @@ class SnakeEnvironment(gym.Env):
                                  dtype = np.float64),
             "body": spaces.Box(low = 0,
                                high = max((CELL_NUMBER_H, CELL_NUMBER_W)),
-                               shape = (CELL_NUMBER_H * CELL_NUMBER_W - 2, 2),
+                               shape = (CELL_NUMBER_H * CELL_NUMBER_W - 2, 3),
                                dtype = np.float64),
             "len_snake": spaces.Box(low = 2,
                                     high = CELL_NUMBER_H * CELL_NUMBER_W,
                                     shape = (1, ),
                                     dtype = np.float64),
-            "do_stupid": spaces.Box(low = 0,
+            "do_stupid_snake": spaces.Box(low = 0,
                                     high = max((CELL_NUMBER_H, CELL_NUMBER_W)),
-                                    shape = (CELL_NUMBER_H * CELL_NUMBER_W - 1, 2),
+                                    shape = (CELL_NUMBER_H * CELL_NUMBER_W - 1, 3),
                                     dtype = np.float64)
         })
             
@@ -60,22 +60,18 @@ class SnakeEnvironment(gym.Env):
     def _get_observation(self):
 
         #Snake coords
-        _body = np.zeros(shape=(CELL_NUMBER_H * CELL_NUMBER_W - 2, 2), dtype=np.float64)
-        _do_stupid_snake = np.zeros(shape=(CELL_NUMBER_H * CELL_NUMBER_W - 2, 2), dtype=np.float64)
+        _body = np.zeros(shape=(CELL_NUMBER_H * CELL_NUMBER_W - 2, 3), dtype=np.float64)
+        _do_stupid_snake = np.zeros(shape=(CELL_NUMBER_H * CELL_NUMBER_W - 1, 3), dtype=np.float64)
 
         for index1, (element1, _) in enumerate(zip(self.game.snake.get_coords(start_with=1), _body)):
             _body[index1, 0] = element1[0]
             _body[index1, 1] = element1[1]
-        
-        _body[index1:, 0] = element1[0]
-        _body[index1:, 1] = element1[1]
+            _body[index1, 2] = 1
 
-        for index1, (element1, _) in enumerate(zip(self.game.saved_cells, _do_stupid_snake)):
-            _do_stupid_snake[index1, 0] = element1.x
-            _do_stupid_snake[index1, 1] = element1.y
-        
-        _do_stupid_snake[index1:, 0] = element1.x
-        _do_stupid_snake[index1:, 1] = element1.y
+        for index2, (element2, _) in enumerate(zip(self.game.saved_cells, _do_stupid_snake)):
+            _do_stupid_snake[index2, 0] = element2[0]
+            _do_stupid_snake[index2, 1] = element2[1]
+            _do_stupid_snake[index2, 2] = 1
         
         _head = np.array([self.game.snake.body[0].x, self.game.snake.body[0].y])
         
@@ -83,7 +79,7 @@ class SnakeEnvironment(gym.Env):
         _target = np.array([self.game.fruit.x - self.game.snake.body[0].x,
                              self.game.fruit.y - self.game.snake.body[0].y])
         
-        _len_snake = len(self.game.get_len_snake())
+        _len_snake = self.game.get_len_snake()
 
         return dict(head=_head, target=_target, body=_body, len_snake=_len_snake, do_stupid_snake=_do_stupid_snake)
     
