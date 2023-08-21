@@ -45,7 +45,7 @@ model = PPO(
 )
 
 checkpoint_callback = CheckpointCallback(
-    save_freq=10000,
+    save_freq=10240,
     save_path=savepoint_path,
     name_prefix="rl_model",
     save_replay_buffer=True,
@@ -63,8 +63,8 @@ eval_callback = EvalCallback(
     log_path=savepoint_path
 )
 
-total_timesteps = 10_000_000
-log_interval = 10_000
+total_timesteps = 25_600_000
+log_interval = 10_240
 
 for timestep in range(0, total_timesteps, log_interval):
     print(f"Training for {log_interval} timesteps")
