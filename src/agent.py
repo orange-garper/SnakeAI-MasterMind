@@ -4,7 +4,7 @@ from environments.snake_environment import SnakeEnvironment
 from gymnasium.wrappers import NormalizeObservation, NormalizeReward
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
-from stable_baselines3.ppo import MlpPolicy, CnnPolicy
+from stable_baselines3.ppo import MlpPolicy, CnnPolicy, MultiInputPolicy
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.callbacks import CheckpointCallback, StopTrainingOnRewardThreshold, EvalCallback
@@ -30,7 +30,7 @@ batch_size = 64
     
 # model = PPO.load(path=ppo_path, env=env)
 model = PPO(
-    MlpPolicy,
+    MultiInputPolicy,
     env,
     verbose=1,
     learning_rate=learning_rate,
