@@ -23,14 +23,18 @@ class SnakeEnvironment(gym.Env):
         super(SnakeEnvironment, self).__init__()
 
         self.observation_space = spaces.Dict({
-            "space": spaces.Box(low = 0, 
-                                high = 3, 
-                                shape = (CELL_NUMBER_H, CELL_NUMBER_W), 
+            "head": spaces.Box(low = 0, 
+                                high = max((CELL_NUMBER_H, CELL_NUMBER_W)), 
+                                shape = (2, ), 
                                 dtype=np.float64),
             "target": spaces.Box(low = -max((CELL_NUMBER_H, CELL_NUMBER_W)), 
                                  high = max((CELL_NUMBER_H, CELL_NUMBER_W)), 
                                  shape = (2, ), 
-                                 dtype = np.float64)
+                                 dtype = np.float64),
+            "body": spaces.Box(low = 0,
+                               high = max((CELL_NUMBER_H, CELL_NUMBER_W)),
+                               shape = (CELL_NUMBER_H * CELL_NUMBER_W - 2, 3),
+                               dtype = np.float64)
         })
             
         self.action_space = spaces.Discrete(4)
@@ -47,21 +51,21 @@ class SnakeEnvironment(gym.Env):
     
     def _get_observation(self):
 
-        _space = np.zeros((CELL_NUMBER_H, CELL_NUMBER_W), dtype=np.float64)
-
-        # Fruit coords
-        _space[self.game.fruit.y, self.game.fruit.x] = 3
-
         #Snake coords
-        for point in self.game.snake.get_coords():
-            if 0 <= point[0] <= CELL_NUMBER_W - 1 and 0 <= point[1] <= CELL_NUMBER_H - 1:
-                _ = point == (self.game.snake.body[0].x, self.game.snake.body[0].y)
-                _space[int(point[1]), int(point[0])] = _+1
+        _body = np.zeros(shape=(CELL_NUMBER_H * CELL_NUMBER_W - 2, 3), dtype=np.float64)
+
+        for index, element, _ in enumerate(zip(self.game.snake.get_coords(start_with=1), _body)):
+            _body[index, 0] = element[0]
+            _body[index, 1] = element[1]
+            _body[index, 2] = 1
         
+        _head = np.array([self.game.snake.body[0].x, self.game.snake.body[0].y])
+        
+        # Fruit coords
         _target = np.array([self.game.fruit.x - self.game.snake.body[0].x,
                              self.game.fruit.y - self.game.snake.body[0].y])
 
-        return dict(space=_space, target=_target)
+        return dict(head=_head, target=_target, body=_body)
     
     def _get_info(self):
         return dict(
