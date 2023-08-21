@@ -54,7 +54,7 @@ class SnakeEnvironment(gym.Env):
         #Snake coords
         _body = np.zeros(shape=(CELL_NUMBER_H * CELL_NUMBER_W - 2, 3), dtype=np.float64)
 
-        for index, element, _ in enumerate(zip(self.game.snake.get_coords(start_with=1), _body)):
+        for index, (element, _) in enumerate(zip(self.game.snake.get_coords(start_with=1), _body)):
             _body[index, 0] = element[0]
             _body[index, 1] = element[1]
             _body[index, 2] = 1
