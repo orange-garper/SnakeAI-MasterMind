@@ -39,6 +39,7 @@ class Snake:
             sk_element = pygame.Rect(int(element.x * CELL_SIZE), int(element.y * CELL_SIZE),
                                         CELL_SIZE, CELL_SIZE)
             pygame.draw.rect(screen, SNAKE_COLOR, sk_element)
+        
     def move(self):
         if self.direction != Vector2(0, 0):
             body = self.body[:-1] if not self.grown else self.body[:]
