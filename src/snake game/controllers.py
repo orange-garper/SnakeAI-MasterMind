@@ -72,10 +72,27 @@ class HumansController(AbstractController):
     def press_button(self, event_key: int):
         """Update _pressed_button based on the input event key.
 
-        Args:
-            event_key: The key corresponding to the pressed button.
+    This method converts the pressed button's event key into a game action and updates the _pressed_button attribute. 
+    It ensures that the new action is not the opposite of the disallowed action, as per the game's mechanics.
 
-        """
+    Args:
+        event_key (int): The key corresponding to the pressed button, obtained from pygame event.
+
+    Example:
+        >>> controller = HumansController()  # Create a HumanController instance
+        >>> controller.press_button(pygame.K_UP)  # Press the UP button
+        >>> controller.get_action
+        'UP'
+        >>> # The current action is UP
+        >>> controller.press_button(pygame.K_DOWN)  # Press the DOWN button (opposite of UP)
+        >>> controller.get_action
+        'UP'
+        >>> # The current action remains UP because DOWN is disallowed
+        >>> controller.press_button(pygame.K_RIGHT)  # Press the RIGHT button
+        >>> controller.get_action
+        'RIGHT'
+        >>> # The current action is updated to RIGHT
+    """
         self._pressed_button = next(
             (
                 value
@@ -132,6 +149,20 @@ class BotsController(AbstractController):
         Args:
             bots_action (int): The AI's action value.
 
+        Example:
+            >>> controller = BotsController()  # Create a BotsController instance
+            >>> controller.press_button(0)  # Press the UP button
+            >>> controller.get_action
+            'UP'
+            >>> # The current action is UP
+            >>> controller.press_button(2)  # Press the DOWN button (opposite of UP)
+            >>> controller.get_action
+            'UP'
+            >>> # The current action remains UP because DOWN is disallowed
+            >>> controller.press_button(3)  # Press the RIGHT button
+            >>> controller.get_action
+            'RIGHT'
+            >>> # The current action is updated to RIGHT
         """
         if (
             (action := self._buttons.get(str(bots_action)))
