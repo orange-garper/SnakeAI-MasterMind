@@ -69,7 +69,7 @@ class HumansController(AbstractController):
         }
         self._pressed_button = None
 
-    def press_button(self, event_key):
+    def press_button(self, event_key: int):
         """Update _pressed_button based on the input event key.
 
         Args:
