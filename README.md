@@ -1,13 +1,13 @@
-# SnakeAI-PPO
+# SnakeAI-MasterMind
 
-![SnakeAI-PPO Demo](docs/demo.gif)
+![SnakeAI-MasterMind Demo](docs/demo.gif)
 
-Welcome to the SnakeAI-PPO repository! Here, you'll find the code to create an exciting "Snake" game controlled by Artificial Intelligence (AI) using the Proximal Policy Optimization (PPO) method.
+Welcome to the SnakeAI-MasterMind repository! Here, you'll find the code to create an exciting "Snake" game controlled by Artificial Intelligence (AI) using the Proximal Policy Optimization (PPO) method.
 
 ## Installation
 
-1. Clone the repository: `git clone https://github.com/orange-garper/SnakeAI-PPO.git`
-2. Navigate to the project directory: `cd SnakeAI-PPO`
+1. Clone the repository: `git clone https://github.com/orange-garper/SnakeAI-MasterMind.git`
+2. Navigate to the project directory: `cd SnakeAI-MasterMind`
 3. Install dependencies: `pip install -r requirements.txt`
 
 ## Usage
