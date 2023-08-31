@@ -39,7 +39,7 @@ class SnakeRender:
             pygame.draw.rect(self.canvas, self.snake_color, r)
         
         for c in corners:
-            pygame.draw.rect(self.canvas, self.outline_color, c)
+            pygame.draw.rect(self.canvas, self.outline_color, (*c, self.outline_width, self.outline_width))
         
         for l in lines:
             pygame.draw.rect(self.canvas, self.outline_color, l)
@@ -65,16 +65,22 @@ class SnakeRender:
     def get_rectangles_collides(self, rectangles):
         """Generates lines for separating snake body segments.
 
+        This method takes an array of pygame.Rect objects representing the rectangles that form the snake's body segments.
+        It generates lines that can be used to separate these body segments visually.
+
         Args:
-            rectangles: An array of pygame.Rect objects representing the rectangles.
+            rectangles (List[pygame.Rect]): An array of pygame.Rect objects representing the rectangles.
 
         Returns:
             np.ndarray: An array of line coordinates.
+
+        Note:
+            This method assumes that the Pygame library is being used for graphical operations.
         """
         rectangles_lines = []
 
-        for r1, r, r3 in zip(np.roll(rectangles, 1), rectangles, np.roll(rectangles, -1)):
-            neighbours = r1 + r3
+        for i, r in enumerate(rectangles):
+            neighbours = rectangles[i-1:i] + rectangles[i+1:i+2]
             sides = [
                 (r.move(-1,  0), (r.left, r.top+self.outline_width, self.outline_width, r.height-2*self.outline_width)),
                 (r.move( 1,  0), (r.right-self.outline_width, r.top+self.outline_width, self.outline_width, r.height-2*self.outline_width)),
@@ -127,7 +133,21 @@ class Snake:
         self._snake_render.render(self.get_bodys_coords())
 
     def move(self):
-        """Move the snake's body based on its current direction."""
+        """Move the snake's body based on its current direction.
+
+        This method updates the position of the snake's body segments based on its current direction. If the snake is not
+        moving (i.e., its direction is the zero vector), the body remains stationary. Otherwise, the method calculates the new
+        coordinates of the snake's head based on the current head position and direction. The new head position is inserted at
+        the beginning of the body segment list, simulating the snake's movement in the specified direction.
+
+        If the snake is set to grow (using the `grow` method), the method does not remove the last body segment, effectively
+        increasing the length of the snake.
+
+        Note:
+            This method does not directly handle collision detection or interaction with the environment. It is responsible
+            solely for updating the internal representation of the snake's body.
+
+        """
         if self.direction != Vector2(0, 0):
             body = self._body[:-1] if not self._grown else self._body[:]
             body.insert(0, body[0] + self._direction)

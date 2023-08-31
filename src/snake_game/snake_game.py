@@ -13,10 +13,12 @@ class SnakeGame:
     def __init__(self, 
                  field_size: Tuple[int] = (10, 10), 
                  cell_size: int = 10,
-                 seed: int = 0):
+                 seed: int = 0,
+                 player_mode: str = "human"):
+        _metadata = {"player_modes": ["human", "AI"]}
         
-        assert (2, 2) < field_size < (255, 255),\
-            f"The field size does not correspond to the supported limits (minimum - (2, 2); maximum - (255, 255)). The specified field size is {field_size}"
+        assert (2, 2) < field_size < (512, 512),\
+            f"The field size does not correspond to the supported limits (minimum - (2, 2); maximum - (512, 512)). The specified field size is {field_size}"
         self._field = Field(*field_size)
 
         assert 2 < cell_size,\
