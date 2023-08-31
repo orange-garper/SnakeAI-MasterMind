@@ -8,43 +8,6 @@ class Field(NamedTuple):
     x_size: int
     y_size: int
 
-class Fruit:
-    position: Vector2
-
-    def render(self, field: Field, cell_size, canvas):
-        return pygame.Rect(int(self.position.x * field.x_size), int(self.position.y * field.y_size),
-                            cell_size, cell_size)
-
-class Snake:
-    def __init__(self, body: Tuple[Vector2]):
-        self._body = list(body)
-        self._grown = False
-        self.direction = Vector2(0, 0)
-    
-    def __len__(self):
-        return len(self._body)
-    
-    def __iter__(self):
-        return iter(self.get_bodys_coords())
-    
-    def render(self):
-        #TODO: Реализовать рисовку змеи с обводкой
-        ...
-
-    def move(self):
-        if self.direction != Vector2(0, 0):
-            body = self._body[:-1] if not self._grown else self._body[:]
-            body.insert(0, body[0] + self._direction)
-            self.body = body[:]
-
-            if self._grown: 
-                self._grown = False
-    
-    def grow(self):
-        self._grown = True
-    
-    def get_bodys_coords(self):
-        return np.array(list(map(lambda v: [v.x, v.y], self._body)))
 
 class SnakeGame:
     def __init__(self, 
