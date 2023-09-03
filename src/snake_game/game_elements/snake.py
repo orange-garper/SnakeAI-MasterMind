@@ -19,11 +19,11 @@ class SnakeRender:
             outline_color (Tuple[int]): The color of the outline as an RGB tuple.
             snake_color (Tuple[int]): The color of the snake body as an RGB tuple.
         """
-        self.canvas = canvas
-        self.cell_size = cell_size
-        self.outline_width = outline_width
-        self.outline_color = outline_color
-        self.snake_color = snake_color
+        self._canvas = canvas
+        self._cell_size = cell_size
+        self._outline_width = outline_width
+        self._outline_color = outline_color
+        self._snake_color = snake_color
 
     def render(self, snake_body):
         """Renders the snake on the canvas.
@@ -32,64 +32,28 @@ class SnakeRender:
             snake_body: The list of positions representing the snake body.
         """
         rectangles = self.get_bodys_rectangles(snake_body)
-        corners = self.get_rectangles_corners(rectangles)
-        lines = self.get_rectangles_collides(rectangles)
 
         for r in rectangles:
-            pygame.draw.rect(self.canvas, self.snake_color, r)
-        
-        for c in corners:
-            pygame.draw.rect(self.canvas, self.outline_color, (*c, self.outline_width, self.outline_width))
-        
-        for l in lines:
-            pygame.draw.rect(self.canvas, self.outline_color, l)
-    
-    def get_rectangles_corners(self, rectangles):
-        """Generates corner coordinates for each rectangle.
-
-        Args:
-            rectangles: An array of pygame.Rect objects representing the rectangles.
-
-        Returns:
-            np.ndarray: An array of corner coordinates.
-        """
-        rectangles_corners = []
-        for r in rectangles:
+            pygame.draw.rect(self._canvas, self._snake_color, r)
             corners = [
-                (r.left, r.top), (r.right-self.outline_width, r.top), 
-                (r.left, r.bottom-self.outline_width), (r.right-self.outline_width, r.bottom-self.outline_width)
+                (r.left, r.top), (r.right-self._outline_width, r.top), 
+                (r.left, r.bottom-self._outline_width), (r.right-self._outline_width, r.bottom-self._outline_width),
             ]
-            rectangles_corners.append(corners)
-        return np.array(rectangles_corners).ravel()
-    
-    def get_rectangles_collides(self, rectangles):
-        """Generates lines for separating snake body segments.
-
-        This method takes an array of pygame.Rect objects representing the rectangles that form the snake's body segments.
-        It generates lines that can be used to separate these body segments visually.
-
-        Args:
-            rectangles (List[pygame.Rect]): An array of pygame.Rect objects representing the rectangles.
-
-        Returns:
-            np.ndarray: An array of line coordinates.
-
-        Note:
-            This method assumes that the Pygame library is being used for graphical operations.
-        """
-        rectangles_lines = []
+            for c in corners:
+                pygame.draw.rect(self._canvas, self._outline_color, (*c, self._outline_width, self._outline_width))
 
         for i, r in enumerate(rectangles):
             neighbours = rectangles[i-1:i] + rectangles[i+1:i+2]
             sides = [
-                (r.move(-1,  0), (r.left, r.top+self.outline_width, self.outline_width, r.height-2*self.outline_width)),
-                (r.move( 1,  0), (r.right-self.outline_width, r.top+self.outline_width, self.outline_width, r.height-2*self.outline_width)),
-                (r.move( 0, -1), (r.left+self.outline_width, r.top, r.width-2*self.outline_width, self.outline_width)),
-                (r.move( 0,  1), (r.left+self.outline_width, r.bottom-self.outline_width, r.width-2*self.outline_width, self.outline_width)),
+                (r.move(-1,  0), (r.left, r.top+self._outline_width, self._outline_width, r.height-2*self._outline_width)),
+                (r.move( 1,  0), (r.right-self._outline_width, r.top+self._outline_width, self._outline_width, r.height-2*self._outline_width)),
+                (r.move( 0, -1), (r.left+self._outline_width, r.top, r.width-2*self._outline_width, self._outline_width)),
+                (r.move( 0,  1), (r.left+self._outline_width, r.bottom-self._outline_width, r.width-2*self._outline_width, self._outline_width)),
             ]
-            lines = [line for test_rect, line in sides if test_rect.collidelist(neighbours) < 0]
-            rectangles_lines.append(lines)
-        return np.array(rectangles_lines).ravel()
+            for test_rect, line in sides:
+                if test_rect.collidelist(neighbours) < 0:
+                    pygame.draw.rect(self._canvas, self._outline_color, line)
+
     
     def get_bodys_rectangles(self, snake_body):
         """Generates rectangles for each element in the snake body.
@@ -100,15 +64,16 @@ class SnakeRender:
         Returns:
             np.ndarray: An array of pygame.Rect objects representing the rectangles.
         """
-        return np.array([pygame.Rect(int(element[0] * self.cell_size), 
-                            int(element[1] * self.cell_size), 
-                            self.cell_size, 
-                            self.cell_size) for element in snake_body])
+        return [pygame.Rect(int(element[0] * self._cell_size), 
+                            int(element[1] * self._cell_size), 
+                            self._cell_size, 
+                            self._cell_size) for element in snake_body]
 
 class Snake:
     def __init__(self, 
                  body: Tuple[Vector2],
-                 snake_render: SnakeRender):
+                 snake_render: SnakeRender,
+                 start_direction: Vector2 = Vector2(0, 0)):
         """Initialize a Snake instance.
 
         Args:
@@ -118,7 +83,7 @@ class Snake:
         self._body = list(body)
         self._grown = False
         self._snake_render = snake_render
-        self.direction = Vector2(0, 0)
+        self._direction = start_direction
     
     def __len__(self):
         """Return the number of segments in the snake's body."""
@@ -148,18 +113,48 @@ class Snake:
             solely for updating the internal representation of the snake's body.
 
         """
-        if self.direction != Vector2(0, 0):
+        if self._direction != Vector2(0, 0):
             body = self._body[:-1] if not self._grown else self._body[:]
             body.insert(0, body[0] + self._direction)
-            self.body = body[:]
+            self._body = body[:]
 
             if self._grown: 
                 self._grown = False
     
-    def grow(self):
+    def grow(self, fruit_coords):
         """Indicate that the snake should grow on the next move."""
-        self._grown = True
+        if self._body[0] == fruit_coords:
+            self._grown = True
+            return True
+        return False
+    
+    def change_direction(self, direction: Vector2):
+        self._direction = direction
     
     def get_bodys_coords(self):
         """Return an array of the snake's body coordinates as [x, y] pairs."""
-        return np.array(list(map(lambda v: [v.x, v.y], self._body)))
+        return list(map(lambda v: (v.x, v.y), self._body))
+    
+    def get_body(self):
+        return self._body
+    
+    def get_direction(self):
+        return self._direction
+    
+    @property
+    def grown_status(self):
+        return self._grown
+    
+    @property
+    def die_status(self):
+        if self._body[0] + self._direction in self._body[1:]:
+            return True
+        return False
+    
+    def die_status_by_walls(self, field):
+        head = self._body[0] + self._direction
+
+        if 0 <= head.x < field.x_size and\
+            0 <= head.y < field.y_size:
+            return False
+        return True

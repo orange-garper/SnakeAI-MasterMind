@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
+from typing import List, Tuple
 import pygame
+from pygame.math import Vector2
 
 class AbstractController(ABC):
     r"""An abstract class representing a controller for the game.
@@ -59,17 +61,17 @@ class HumansController(AbstractController):
 
     """
 
-    def __init__(self):
+    def __init__(self, start_pressed_button: str | Vector2 = None):
         """Initialize the HumanController with mapping of input buttons to game actions."""
         self._buttons = {
-            "K_UP": ("UP", "DOWN"),
-            "K_LEFT": ("LEFT", "RIGHT"),
-            "K_DOWN": ("DOWN", "UP"),
-            "K_RIGHT": ("RIGHT", "LEFT")
+            "K_UP": Vector2(0, -1),
+            "K_LEFT": Vector2(-1, 0),
+            "K_DOWN":  Vector2(0, 1),
+            "K_RIGHT":  Vector2(1, 0)
         }
-        self._pressed_button = None
+        self._pressed_button = start_pressed_button or Vector2(0, 0)
 
-    def press_button(self, event_key: int):
+    def press_button(self, event_key: int, snake_body: List[Vector2]):
         """Update _pressed_button based on the input event key.
 
     This method converts the pressed button's event key into a game action and updates the _pressed_button attribute. 
@@ -99,8 +101,7 @@ class HumansController(AbstractController):
                 for key, value in self._buttons.items()
                 if getattr(pygame, key) == event_key
                 and (
-                    not self._pressed_button
-                    or value[0] != self._pressed_button[1]
+                    snake_body[0] + value not in snake_body[1:]
                 )
             ),
             self._pressed_button,
@@ -115,7 +116,7 @@ class HumansController(AbstractController):
         """
         if self._pressed_button is None:
             return
-        return self._pressed_button[0]
+        return self._pressed_button
 
 
 class AIsController(AbstractController):
@@ -133,17 +134,17 @@ class AIsController(AbstractController):
 
     """
 
-    def __init__(self):
+    def __init__(self, start_pressed_button: str):
         """Initialize the AIsController with mapping of action values to game actions."""
         self._buttons = {
-            "0": ("UP", "DOWN"),
-            "1": ("LEFT", "RIGHT"),
-            "2": ("DOWN", "UP"),
-            "3": ("RIGHT", "LEFT")
+            "0": Vector2(0, -1),
+            "1": Vector2(-1, 0),
+            "2": Vector2(0, 1),
+            "3": Vector2(1, 0)
         }
-        self._pressed_button = None
+        self._pressed_button = start_pressed_button or Vector2(0, 0)
 
-    def press_button(self, ais_action: int):
+    def press_button(self, ais_action: int, snake_body: List[Vector2]):
         """Update _pressed_button based on the AI's action.
 
         Args:
@@ -174,7 +175,7 @@ so come back when you fix your 'child', which you obviously made under booze.\
 The eagle stirs up her nest, isn't it?)"
         
         action = self._buttons.get(str(ais_action))
-        if not self._pressed_button or self._pressed_button[1] != action[0]:
+        if snake_body[0] + action not in snake_body[1:]:
             self._pressed_button = action
 
     @property
@@ -186,4 +187,4 @@ The eagle stirs up her nest, isn't it?)"
         """
         if self._pressed_button is None:
             return
-        return self._pressed_button[0]
+        return self._pressed_button

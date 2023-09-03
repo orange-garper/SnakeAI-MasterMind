@@ -7,8 +7,8 @@ class FruitRender:
         """Initialize FruitRender.
 
         Args:
-            cell_size (int): The size of each cell in pixels.
-            canvas (pygame.Surface): The surface where the fruit will be drawn.
+            _cell_size (int): The size of each cell in pixels.
+            _canvas (pygame.Surface): The surface where the fruit will be drawn.
         """
         self._cell_size = cell_size
         self._fruit_color = fruit_color
@@ -20,21 +20,23 @@ class FruitRender:
         Args:
             position (Vector2): The position of the fruit.
         """
-        rectangle = pygame.Rect(int(position.x * self._cell_size), int(position.y * self._cell_size),
-                            self._cell_size, self._cell_size)
+        rectangle = pygame.Rect(int((position.x + 0.25) * self._cell_size), int((position.y + 0.25) * self._cell_size),
+                            self._cell_size // 2, self._cell_size // 2)
         pygame.draw.rect(self._canvas, self._fruit_color, rectangle)
 
 class Fruit:
-    def __init__(self, position: Vector2, fruit_render: FruitRender):
+    def __init__(self, 
+                 position: Vector2, 
+                 fruit_render: FruitRender):
         """Initialize Fruit.
 
         Args:
             position (Vector2): The initial position of the fruit.
-            fruit_render (FruitRender): An instance of FruitRender used for rendering.
+            _fruit_render (FruitRender): An instance of FruitRender used for rendering.
         """
         self.position = position
         self._fruit_render = fruit_render
 
     def render(self):
         """Render the fruit using the associated FruitRender instance."""
-        self.fruit_render.render(self.position)
+        self._fruit_render.render(self.position)
