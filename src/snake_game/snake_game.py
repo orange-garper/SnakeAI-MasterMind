@@ -172,10 +172,10 @@ class SnakeGame:
                 canvas=self._canvas,
             ),
         )
-    
+
     def get_snake_length(self):
         return len(self._snake)
-    
+
     @property
     def grown(self):
         return self._snake.grown_status
@@ -187,7 +187,7 @@ class SnakeGame:
     @property
     def won(self):
         return len(self._snake) == self._field.x_size * self._field.y_size
-    
+
     @property
     def do_stupid(self):
         return self._controller.do_stupid
@@ -195,7 +195,7 @@ class SnakeGame:
     def get_state(self) -> NDArray:
         coordinates = np.zeros(shape=(self._field.x_size, self._field.y_size, 3))
         snake_head_coords, *snake_body_coords = self._snake.get_body()
-        
+
         snake_head_coords = np.array(snake_head_coords, dtype=np.int8)
         snake_body_coords = np.array(snake_body_coords, dtype=np.int8).T
         fruit_position = np.array(self._fruit.position, dtype=np.int8)
