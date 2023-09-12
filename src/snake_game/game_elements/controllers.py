@@ -3,188 +3,83 @@ from typing import List, Tuple
 import pygame
 from pygame.math import Vector2
 
+
 class AbstractController(ABC):
-    r"""An abstract class representing a controller for the game.
-
-    The main purpose of a controller is to convert input information from one class object (e.g., Bot) into the necessary format for another class object (e.g., 'Game'). This control mechanism allows the game, in this case, a SnakeGame object, to read the self._pressed_button variable from the controller and use it to control the snake's movements.
-
-    Important Attributes:
-        _buttons (dict): A dictionary where keys represent input buttons, and values are tuples of corresponding game actions.
-        _pressed_button (tuple | None): A tuple that holds the current action and the disallowed action. It's initialized as None.
-
-    Methods:
-        press_button(self, *args, **kwargs): Convert input button presses into game actions and update self._pressed_button.
-        get_action(self): Get the current action stored in self._pressed_button.
-
-    Note:
-        Subclasses should define self._buttons and self._pressed_button in their __init__ methods.
-
-    """
-
     @abstractmethod
     def __init__(self):
-        """Initialize the controller's attributes _buttons and _pressed_button."""
         raise NotImplementedError()
 
     @abstractmethod
     def press_button(self, *args, **kwargs):
-        """Convert input button presses into game actions and update self._pressed_button.
-
-        Args:
-            *args, **kwargs: Additional arguments and keyword arguments as needed for specific implementations.
-        """
         raise NotImplementedError()
 
     @property
     @abstractmethod
     def get_action(self):
-        """Get the current action stored in self._pressed_button.
-
-        Returns:
-            Action: The current action stored in self._pressed_button.
-        """
         raise NotImplementedError()
 
 
 class HumansController(AbstractController):
-    r"""A class representing a controller for human players.
-
-    This controller is designed to handle user input for controlling the game. It maps user input buttons to corresponding game actions and disallowed actions to prevent reversing the snake's direction.
-
-    Attributes:
-        _buttons (dict): A dictionary mapping input buttons to game actions.
-        _pressed_button (tuple | None): A tuple holding the current action and disallowed action.
-
-    Methods:
-        press_button(self, event_key): Update the _pressed_button based on the input event key.
-        get_action(self): Get the current game action from _pressed_button.
-
-    """
-
     def __init__(self, start_pressed_button: str | Vector2 = None):
-        """Initialize the HumanController with mapping of input buttons to game actions."""
         self._buttons = {
             "K_UP": Vector2(0, -1),
             "K_LEFT": Vector2(-1, 0),
-            "K_DOWN":  Vector2(0, 1),
-            "K_RIGHT":  Vector2(1, 0)
+            "K_DOWN": Vector2(0, 1),
+            "K_RIGHT": Vector2(1, 0),
         }
         self._pressed_button = start_pressed_button or Vector2(0, 0)
+        self._do_stupid: bool | None = None
 
     def press_button(self, event_key: int, snake_body: List[Vector2]):
-        """Update _pressed_button based on the input event key.
-
-    This method converts the pressed button's event key into a game action and updates the _pressed_button attribute. 
-    It ensures that the new action is not the opposite of the disallowed action, as per the game's mechanics.
-
-    Args:
-        event_key (int): The key corresponding to the pressed button, obtained from pygame event.
-
-    Example:
-        >>> controller = HumansController()  # Create a HumanController instance
-        >>> controller.press_button(pygame.K_UP)  # Press the UP button
-        >>> controller.get_action
-        'UP'
-        >>> # The current action is UP
-        >>> controller.press_button(pygame.K_DOWN)  # Press the DOWN button (opposite of UP)
-        >>> controller.get_action
-        'UP'
-        >>> # The current action remains UP because DOWN is disallowed
-        >>> controller.press_button(pygame.K_RIGHT)  # Press the RIGHT button
-        >>> controller.get_action
-        'RIGHT'
-        >>> # The current action is updated to RIGHT
-    """
         self._pressed_button = next(
             (
                 value
                 for key, value in self._buttons.items()
                 if getattr(pygame, key) == event_key
-                and (
-                    snake_body[0] + value not in snake_body[1:]
-                )
+                and (do_not_stupid := (snake_body[0] + value != snake_body[1]))
             ),
             self._pressed_button,
         )
+        self._do_stupid = not do_not_stupid
 
     @property
     def get_action(self):
-        """Get the current game action from _pressed_button.
-
-        Returns:
-            Action: The current game action.
-        """
         if self._pressed_button is None:
             return
         return self._pressed_button
 
 
 class AIsController(AbstractController):
-    r"""A class representing a controller for AI players.
-
-    This controller is designed to handle actions generated by AI agents. It maps action values to corresponding game actions and disallowed actions to prevent reversing the snake's direction.
-
-    Attributes:
-        _buttons (dict): A dictionary mapping action values to game actions.
-        _pressed_button (tuple | None): A tuple holding the current action and disallowed action.
-
-    Methods:
-        press_button(self, bots_action): Update the _pressed_button based on the AI's action.
-        get_action(self): Get the current game action from _pressed_button.
-
-    """
-
-    def __init__(self, start_pressed_button: str):
-        """Initialize the AIsController with mapping of action values to game actions."""
+    def __init__(self, start_pressed_button: str | Vector2 = None):
         self._buttons = {
             "0": Vector2(0, -1),
             "1": Vector2(-1, 0),
             "2": Vector2(0, 1),
-            "3": Vector2(1, 0)
+            "3": Vector2(1, 0),
         }
         self._pressed_button = start_pressed_button or Vector2(0, 0)
 
     def press_button(self, ais_action: int, snake_body: List[Vector2]):
-        """Update _pressed_button based on the AI's action.
-
-        Args:
-            bots_action (int): The AI's action value.
-
-        Example:
-            >>> controller = AIsController()  # Create a AIsController instance
-            >>> controller.press_button(0)  # Press the UP button
-            >>> controller.get_action
-            'UP'
-            >>> # The current action is UP
-            >>> controller.press_button(2)  # Press the DOWN button (opposite of UP)
-            >>> controller.get_action
-            'UP'
-            >>> # The current action remains UP because DOWN is disallowed
-            >>> controller.press_button(3)  # Press the RIGHT button
-            >>> controller.get_action
-            'RIGHT'
-            >>> # The current action is updated to RIGHT
-        """
-        assert str(ais_action) in self._buttons,\
-            f"Oh, is your artificial intelligence so stupidly configured?\
+        assert (
+            str(ais_action) in self._buttons
+        ), f"Oh, is your artificial intelligence so stupidly configured?\
 Your artificial intelligence decided that it was necessary to violate the existing boundaries of reality,\
 and intended to perform an action under the number {ais_action},\
 which is even worse than dividing by zero.\
 The {ais_action} number is not recorded in self._buttons,\
 so come back when you fix your 'child', which you obviously made under booze.\
 The eagle stirs up her nest, isn't it?)"
-        
+
         action = self._buttons.get(str(ais_action))
-        if snake_body[0] + action not in snake_body[1:]:
+        if do_not_stupid := snake_body[0] + action != snake_body[1]:
             self._pressed_button = action
+            self._do_stupid = not do_not_stupid
 
     @property
     def get_action(self):
-        """Get the current game action from _pressed_button.
-
-        Returns:
-            Action: The current game action.
-        """
         if self._pressed_button is None:
             return
         return self._pressed_button
+
+    def do_stupid(self):
+        return self._do_stupid
