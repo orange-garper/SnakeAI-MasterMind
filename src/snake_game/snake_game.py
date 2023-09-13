@@ -33,15 +33,19 @@ class SnakeGame:
 
         assert (
             (2, 2) < field_size < (512, 512)
-        ), f"The field size does not correspond to the supported limits (minimum - (2, 2); maximum - (512, 512)). The specified field size is {field_size}"
+        ), f"The field size does not correspond to the supported \
+limits (minimum - (2, 2); maximum - (512, 512)).\
+The specified field size is {field_size}"
         assert (
             2 < cell_size
-        ), f"The cell size must be greater than one pixel. The set cell size is {cell_size}"
+        ), f"The cell size must be greater than one pixel. \
+The set cell size is {cell_size}"
         self._field = Field(*field_size, cell_size)
 
         assert (
             player_mode in self._metadata["player_modes"]
-        ), f"The set player mode is not predefined for the class. The current player mode is {player_mode}."
+        ), f"The set player mode is not predefined for the class. \
+The current player mode is {player_mode}."
         self._player_mode = player_mode
 
         self._canvas = pygame.Surface(
@@ -61,6 +65,7 @@ class SnakeGame:
         self.reset()
 
     def init(self):
+        self.render()
         if self._player_mode == "human":
             while True:
                 for event in pygame.event.get():
@@ -149,7 +154,9 @@ class SnakeGame:
         if defined_coordinates is None:
             assert (
                 self._snake is not None
-            ), "Before generating the coordinates for the Fruit, the coordinates of the Snake itself are needed. Apparently it hasn't been initialized yet."
+            ), "Before generating the coordinates for the Fruit,\
+ the coordinates of the Snake itself are needed.\
+ Apparently it hasn't been initialized yet."
 
             snake_coords = self._snake.get_bodys_coords()
             available_cells = [

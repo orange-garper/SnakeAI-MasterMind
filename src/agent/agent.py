@@ -32,8 +32,12 @@ class SnakeAgent:
             4,
             channels_order="last",
         )
-        self._eval_environment = Monitor(
-            SnakeEnvironment(field_size, cell_size, render_mode=render_mode)
+        self._eval_environment = VecFrameStack(
+            DummyVecEnv(
+                [lambda: Monitor(SnakeEnvironment(field_size, cell_size, render_mode='human'))]
+            ),
+            4,
+            channels_order="last",
         )
 
         self._model = PPO(
@@ -68,7 +72,7 @@ class SnakeAgent:
         )
         print(f"Mean reward: {mean_reward} +/- {std_reward}")
         return mean_reward, std_reward
-    
+
     def close_environment(self):
         self._environment.close()
         self._eval_environment.close()

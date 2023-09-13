@@ -14,7 +14,6 @@ class HyperparametersDefining:
         n_jobs: int = 1,
         n_eval_episodes: int = 10,
         verbose: bool = False,
-
     ):
         self._field_size = field_size
         self._cell_size = cell_size
@@ -36,7 +35,9 @@ class HyperparametersDefining:
 
     def _optimize_agent(self, trial):
         model_params = self._get_hyperparameters(trial)
-        agent = SnakeAgent(self._field_size, self._cell_size, verbose=self._verbose,**model_params)
+        agent = SnakeAgent(
+            self._field_size, self._cell_size, verbose=self._verbose, **model_params
+        )
 
         agent.train_model(total_timesteps=self._total_timesteps)
         mean_reward, _ = agent.evalute_model(n_eval_episodes=self._n_eval_episodes)
@@ -46,5 +47,7 @@ class HyperparametersDefining:
 
     def optimize(self):
         study = optuna.create_study(direction="maximize")
-        study.optimize(self._optimize_agent, n_trials=self._n_trials, n_jobs=self._n_jobs)
+        study.optimize(
+            self._optimize_agent, n_trials=self._n_trials, n_jobs=self._n_jobs
+        )
         return study.best_params

@@ -1,6 +1,6 @@
 from src.snake_game import SnakeGame
 
-CELL_SIZE, FIELD_SIZE = 40, (18, 32)
+CELL_SIZE, FIELD_SIZE = 30, (32, 18)
 
 if __name__ == "__main__":
     g = SnakeGame(field_size=FIELD_SIZE, cell_size=CELL_SIZE)

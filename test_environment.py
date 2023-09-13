@@ -1,8 +1,6 @@
-import gym
-import random
 from src.gym_environment import SnakeEnvironment
 
-CELL_SIZE, FIELD_SIZE = 40, (18, 32)
+CELL_SIZE, FIELD_SIZE = 30, (32, 18)
 
 env = SnakeEnvironment(
     field_size=FIELD_SIZE, cell_size=CELL_SIZE, render_mode="human"

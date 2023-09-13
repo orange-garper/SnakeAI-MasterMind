@@ -37,7 +37,9 @@ class SnakeEnvironment(gym.Env):
 
         assert (
             render_mode is None or render_mode in _metadata["render_mode"]
-        ), f"The specified rendering mode is not provided. Available render modes : {', '.join(_metadata['render_mode'])}"
+        ), f"The specified rendering mode is not provided.\
+ Available render modes\
+ : {', '.join(_metadata['render_mode'])}"
         self._render_mode = render_mode
 
         self.reward_parameters = reward_parameters
