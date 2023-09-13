@@ -36,7 +36,7 @@ class SnakeAgent:
             DummyVecEnv(
                 [
                     lambda: Monitor(
-                        SnakeEnvironment(field_size, cell_size, render_mode="human")
+                        SnakeEnvironment(field_size, cell_size, render_mode=render_mode)
                     )
                 ]
             ),
