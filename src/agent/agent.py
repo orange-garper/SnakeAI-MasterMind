@@ -34,7 +34,11 @@ class SnakeAgent:
         )
         self._eval_environment = VecFrameStack(
             DummyVecEnv(
-                [lambda: Monitor(SnakeEnvironment(field_size, cell_size, render_mode='human'))]
+                [
+                    lambda: Monitor(
+                        SnakeEnvironment(field_size, cell_size, render_mode="human")
+                    )
+                ]
             ),
             4,
             channels_order="last",
