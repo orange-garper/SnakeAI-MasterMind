@@ -2,10 +2,10 @@ import gym
 import random
 from src.gym_environment import SnakeEnvironment
 
-CELL_SIZE, CELL_NUMBER_H, CELL_NUMBER_W = 40, 18, 32
+CELL_SIZE, FIELD_SIZE = 40, (18, 32)
 
 env = SnakeEnvironment(
-    field_size=(CELL_NUMBER_W, CELL_NUMBER_H), cell_size=CELL_SIZE, render_mode="human"
+    field_size=FIELD_SIZE, cell_size=CELL_SIZE, render_mode="human"
 )
 height, width, channels = env.observation_space.shape
 action = env.action_space.n

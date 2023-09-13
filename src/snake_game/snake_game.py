@@ -24,8 +24,9 @@ class Field(NamedTuple):
 class SnakeGame:
     def __init__(
         self,
-        field_size: Tuple[int] = (10, 10),
-        cell_size: int = 10,
+        field_size: Tuple[int],
+        cell_size: int,
+        *,
         player_mode: str = "human",
     ):
         self._metadata = {"player_modes": ["human", "AI"], "render_fps": 60}
@@ -59,8 +60,21 @@ class SnakeGame:
 
         self.reset()
 
-    def init(self, render_mode=True):
-        if self.window is None and render_mode == True:
+    def init(self):
+        if self._player_mode == "human":
+            while True:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        sys.exit
+                    if event.type == self._screen_update:
+                        self.update()
+                    if event.type == pygame.KEYDOWN:
+                        self.make_action(event.key)
+                self.render()
+
+    def render(self):
+        if self.window is None:
             pygame.init()
             pygame.display.init()
             self.window = pygame.display.set_mode(
@@ -72,25 +86,9 @@ class SnakeGame:
             self._screen_update = pygame.USEREVENT
             pygame.time.set_timer(self._screen_update, 150)
 
-        if self.clock is None and render_mode == True:
+        if self.clock is None:
             self.clock = pygame.time.Clock()
 
-        if render_mode == True:
-            if self._player_mode == "human":
-                while True:
-                    for event in pygame.event.get():
-                        if event.type == pygame.QUIT:
-                            pygame.quit()
-                            sys.exit
-                        if event.type == self._screen_update:
-                            self.update()
-                        if event.type == pygame.KEYDOWN:
-                            self.make_action(event.key)
-                    self.render()
-            else:
-                self.render()
-
-    def render(self):
         self._canvas.fill((0, 0, 0))
         self._fruit.render()
         self._snake.render()
@@ -173,7 +171,8 @@ class SnakeGame:
             ),
         )
 
-    def get_snake_length(self):
+    @property
+    def snake_length(self):
         return len(self._snake)
 
     @property
@@ -193,7 +192,9 @@ class SnakeGame:
         return self._controller.do_stupid
 
     def get_state(self) -> NDArray:
-        coordinates = np.zeros(shape=(self._field.x_size, self._field.y_size, 3))
+        coordinates = np.zeros(
+            shape=(self._field.x_size, self._field.y_size, 3), dtype=np.uint8
+        )
         snake_head_coords, *snake_body_coords = self._snake.get_body()
 
         snake_head_coords = np.array(snake_head_coords, dtype=np.int8)
