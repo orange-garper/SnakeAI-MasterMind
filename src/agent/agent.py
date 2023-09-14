@@ -14,7 +14,7 @@ class SnakeAgent:
         *,
         save_model_path: str | None = None,
         tensorboard_log=None,
-        render_mode="human",
+        render_mode: str | None = None,
         verbose: int = 1,
         learning_rate=0.0005,
         n_steps=256,

@@ -23,7 +23,7 @@ class SnakeEnvironment(gym.Env):
         field_size: Tuple[int, int],
         cell_size: int,
         *,
-        render_mode: str | None = "human",
+        render_mode: str | None = None,
         reward_parameters: RewardParametersPack | None = None,
     ) -> None:
         _metadata = {"render_mode": ["human"]}
