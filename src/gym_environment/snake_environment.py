@@ -13,6 +13,7 @@ class RewardParametersPack(NamedTuple):
     stupid_reward_multiplier: int = 1
     death_reward_multiplier: int = 1
     victory_reward_multiplier: int = 1
+    max_steps_reward_multiplier: int = 0
     multiply_by_length: bool = False
 
 
@@ -21,11 +22,13 @@ class SnakeEnvironment(gym.Env):
         self,
         field_size: Tuple[int, int],
         cell_size: int,
+        *,
         render_mode: str | None = "human",
-        reward_parameters: RewardParametersPack = RewardParametersPack(),
+        reward_parameters: RewardParametersPack | None = None,
     ) -> None:
         _metadata = {"render_mode": ["human"]}
 
+        self._field_size = field_size
         self._snake_game = SnakeGame(
             field_size=field_size, cell_size=cell_size, player_mode="AI"
         )
@@ -42,7 +45,10 @@ class SnakeEnvironment(gym.Env):
  : {', '.join(_metadata['render_mode'])}"
         self._render_mode = render_mode
 
-        self.reward_parameters = reward_parameters
+        self.reward_parameters = reward_parameters or RewardParametersPack()
+        self._do_max_steps = lambda field_size, lenght_size, steps: steps > (
+            field_size[0] * field_size[1] * (lenght_size - 1)
+        )
         self._previous_state = None
 
     def _preprocess(self, observation):
@@ -115,6 +121,18 @@ class SnakeEnvironment(gym.Env):
             if self._snake_game.won
             else 0
         )
+        reward_for_max_steps =(
+            -1
+            * self.reward_parameters.max_steps_reward_multiplier
+            * (
+                self.reward_parameters.multiply_by_length
+                * self._snake_game.snake_length
+            )
+            if self._do_max_steps(
+                self._field_size, self._snake_game.snake_length, self._snake_game.steps
+            )
+            else 0
+        )
 
         return sum(
             (
@@ -123,16 +141,23 @@ class SnakeEnvironment(gym.Env):
                 reward_for_stupid_move,
                 reward_for_death,
                 reward_for_victory,
+                reward_for_max_steps
             )
         )
 
-    def step(self, action: int) -> Tuple[NDArray, float, bool, dict]:
+    def step(self, action: int) -> Tuple[NDArray, float, bool, bool, dict]:
         self._snake_game.make_action(action)
         self._snake_game.update()
 
         observation = self._get_observation()
         reward = self._reward_analize()
-        terminated = self._snake_game.game_over or self._snake_game.won
+        terminated = (
+            self._snake_game.game_over
+            or self._snake_game.won
+            or self._do_max_steps(
+                self._field_size, self._snake_game.snake_length, self._snake_game.steps
+            )
+        )
         truncated = False
         info = self._get_info()
 

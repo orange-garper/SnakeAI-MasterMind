@@ -1,4 +1,4 @@
-from ..gym_environment import SnakeEnvironment
+from ..gym_environment import SnakeEnvironment, RewardParametersPack
 from stable_baselines3.common.evaluation import evaluate_policy
 from stable_baselines3.common.vec_env import DummyVecEnv, VecFrameStack
 from stable_baselines3.common.monitor import Monitor
@@ -24,10 +24,18 @@ class SnakeAgent:
         clip_range=0.2,
         n_epochs=10,
         batch_size=64,
+        reward_parameters: RewardParametersPack | None = None,
     ):
         self._environment = VecFrameStack(
             DummyVecEnv(
-                [lambda: SnakeEnvironment(field_size, cell_size, render_mode=None)]
+                [
+                    lambda: SnakeEnvironment(
+                        field_size,
+                        cell_size,
+                        render_mode=None,
+                        reward_parameters=reward_parameters,
+                    )
+                ]
             ),
             4,
             channels_order="last",
@@ -36,7 +44,12 @@ class SnakeAgent:
             DummyVecEnv(
                 [
                     lambda: Monitor(
-                        SnakeEnvironment(field_size, cell_size, render_mode=render_mode)
+                        SnakeEnvironment(
+                            field_size,
+                            cell_size,
+                            render_mode=render_mode,
+                            reward_parameters=reward_parameters,
+                        )
                     )
                 ]
             ),

@@ -110,12 +110,14 @@ The current player mode is {player_mode}."
             self.reset()
         else:
             self._snake.move()
+            self._steps += 1
             if self._snake.grow(self._fruit.position):
                 self._fruit = self._generate_fruit()
 
     def reset(self):
         self._snake: Snake = self._generate_snake()
         self._fruit: Fruit = self._generate_fruit()
+        self._steps = 0
 
         if self._player_mode == "human":
             self._controller = HumansController()
@@ -197,6 +199,10 @@ The current player mode is {player_mode}."
     @property
     def do_stupid(self):
         return self._controller.do_stupid
+    
+    @property
+    def steps(self):
+        return self._steps
 
     def get_state(self) -> NDArray:
         coordinates = np.zeros(

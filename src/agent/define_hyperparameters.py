@@ -1,5 +1,6 @@
 import optuna
 from .agent import SnakeAgent
+from ..gym_environment import RewardParametersPack
 from typing import Tuple
 
 
@@ -9,6 +10,7 @@ class HyperparametersDefining:
         field_size: Tuple[int, int],
         cell_size: int,
         *,
+        log_path: str = None,
         total_timesteps: int = 10000,
         n_trials: int = 100,
         n_jobs: int = 1,
@@ -17,6 +19,7 @@ class HyperparametersDefining:
     ):
         self._field_size = field_size
         self._cell_size = cell_size
+        self._log_path = log_path
         self._total_timesteps = total_timesteps
         self._n_trials = n_trials
         self._n_jobs = n_jobs
@@ -31,12 +34,39 @@ class HyperparametersDefining:
             gamma=trial.suggest_float("gamma", 0.8, 0.9999, log=True),
             ent_coef=trial.suggest_float("ent_coef", 1e-4, 0.1, log=True),
             clip_range=trial.suggest_float("clip_range", 0.1, 0.4, log=True),
+            reward_parameters=RewardParametersPack(
+                step_reward_multiplier=trial.suggest_float(
+                    "step_reward_multiplier", 0.5, 2, log=True
+                ),
+                food_reward_multiplier=trial.suggest_float(
+                    "food_reward_multiplier", 0.5, 2, log=True
+                ),
+                stupid_reward_multiplier=trial.suggest_float(
+                    "stupid_reward_multiplier", 0.5, 2, log=True
+                ),
+                death_reward_multiplier=trial.suggest_float(
+                    "death_reward_multiplier", 0.5, 2, log=True
+                ),
+                victory_reward_multiplier=trial.suggest_float(
+                    "victory_reward_multiplier", 0.5, 2, log=True
+                ),
+                max_steps_reward_multiplier=trial.suggest_float(
+                    "max_steps_reward_multiplier", 0.5, 2, log=True
+                ),
+                multiply_by_length=trial.suggest_categorical(
+                    "multiply_by_length", [False, True]
+                ),
+            ),
         )
 
     def _optimize_agent(self, trial):
         model_params = self._get_hyperparameters(trial)
         agent = SnakeAgent(
-            self._field_size, self._cell_size, verbose=self._verbose, **model_params
+            self._field_size,
+            self._cell_size,
+            verbose=self._verbose,
+            tensorboard_log=self._log_path,
+            **model_params,
         )
 
         agent.train_model(total_timesteps=self._total_timesteps)
