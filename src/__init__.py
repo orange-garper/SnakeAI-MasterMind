@@ -1,5 +1,6 @@
-from .snake_game import Field, SnakeGame
-from .game_elements import (
+from .snake_game import (
+    Field, 
+    SnakeGame,
     AbstractController,
     HumansController,
     AIsController,
@@ -8,3 +9,4 @@ from .game_elements import (
     SnakeRender,
     Snake,
 )
+from .agent import SnakeAgent

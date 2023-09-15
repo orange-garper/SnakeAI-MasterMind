@@ -9,12 +9,12 @@ from stable_baselines3 import PPO
 class SnakeAgent:
     def __init__(
         self,
-        field_size,
-        cell_size,
+        field_size: int | None = None,
+        cell_size: int | None = None,
         *,
         save_model_path: str | None = None,
         tensorboard_log=None,
-        render_mode: str | None = None,
+        render_mode: str | None = "human",
         verbose: int = 1,
         learning_rate=0.0005,
         n_steps=256,
@@ -24,9 +24,48 @@ class SnakeAgent:
         clip_range=0.2,
         n_epochs=10,
         batch_size=64,
+        model: PPO | None = None,
+        env=None,
         reward_parameters: RewardParametersPack | None = None,
     ):
-        self._environment = VecFrameStack(
+        if env is None:
+            (
+                self._environment,
+                self._eval_environment,
+            ) = self._generate_environment(
+                field_size,
+                cell_size,
+                render_mode,
+                reward_parameters,
+            )
+        else:
+            self._environment, self._environment = env, Monitor(env)
+
+        if model is None:
+            self._model = self._generate_model(
+                verbose,
+                learning_rate,
+                n_steps,
+                gae_lambda,
+                gamma,
+                ent_coef,
+                clip_range,
+                n_epochs,
+                batch_size,
+                tensorboard_log,
+            )
+        else:
+            self._model = model
+        self._save_model_path = save_model_path
+
+    def _generate_environment(
+        self,
+        field_size,
+        cell_size,
+        render_mode,
+        reward_parameters,
+    ):
+        environment = VecFrameStack(
             DummyVecEnv(
                 [
                     lambda: SnakeEnvironment(
@@ -40,14 +79,14 @@ class SnakeAgent:
             4,
             channels_order="last",
         )
-        self._eval_environment = VecFrameStack(
+        eval_environment = VecFrameStack(
             DummyVecEnv(
                 [
                     lambda: Monitor(
                         SnakeEnvironment(
                             field_size,
                             cell_size,
-                            render_mode=render_mode,
+                            render_mode="human",
                             reward_parameters=reward_parameters,
                         )
                     )
@@ -56,8 +95,22 @@ class SnakeAgent:
             4,
             channels_order="last",
         )
+        return environment, eval_environment
 
-        self._model = PPO(
+    def _generate_model(
+        self,
+        verbose,
+        learning_rate,
+        n_steps,
+        gae_lambda,
+        gamma,
+        ent_coef,
+        clip_range,
+        n_epochs,
+        batch_size,
+        tensorboard_log,
+    ):
+        model = PPO(
             CnnPolicy,
             self._environment,
             verbose=verbose,
@@ -72,10 +125,24 @@ class SnakeAgent:
             tensorboard_log=tensorboard_log,
         )
 
-        self._save_model_path = save_model_path
+        return model
 
     def train_model(self, total_timesteps, callback=None):
         self._model.learn(total_timesteps=total_timesteps, callback=callback)
+
+    @classmethod
+    def load_model(
+        cls, path: str, field_size: int | None = None, cell_size: int | None = None
+    ):
+        model = PPO.load(path)
+        env = model.get_env()
+        return cls(
+            field_size=field_size,
+            cell_size=cell_size,
+            model=model,
+            env=env,
+            save_model_path=path,
+        )
 
     def save_model(self):
         self._model.save(self._save_model_path)

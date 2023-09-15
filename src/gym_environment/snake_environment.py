@@ -20,17 +20,18 @@ class RewardParametersPack(NamedTuple):
 class SnakeEnvironment(gym.Env):
     def __init__(
         self,
-        field_size: Tuple[int, int],
-        cell_size: int,
+        field_size: Tuple[int, int] | None = None,
+        cell_size: int | None = None,
         *,
         render_mode: str | None = None,
         reward_parameters: RewardParametersPack | None = None,
     ) -> None:
         _metadata = {"render_mode": ["human"]}
 
-        self._field_size = field_size
+        self._field_size = field_size or (10, 10)
+        self._cell_size = cell_size or 2
         self._snake_game = SnakeGame(
-            field_size=field_size, cell_size=cell_size, player_mode="AI"
+            field_size=self._field_size, cell_size=self._cell_size, player_mode="AI"
         )
 
         self.observation_space = spaces.Box(
@@ -160,8 +161,9 @@ class SnakeEnvironment(gym.Env):
         )
         truncated = False
         info = self._get_info()
-
-        self.render()
+        
+        if self._render_mode == "human":
+            self.render()
 
         return observation, reward, terminated, truncated, info
 
@@ -169,13 +171,14 @@ class SnakeEnvironment(gym.Env):
         self, *, seed: int | None = None, options: dict[str, Any] | None = None
     ) -> Tuple[NDArray, dict]:
         self._snake_game.reset()
-        self.render()
+
+        if self._render_mode == "human":
+            self.render()
 
         return self._get_observation(), self._get_info()
 
     def render(self) -> None:
-        if self._render_mode == "human":
-            self._snake_game.render()
+        self._snake_game.render()
 
     def close(self) -> None:
         self._snake_game.close()

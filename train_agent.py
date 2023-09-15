@@ -29,6 +29,7 @@ def main():
         CELL_SIZE,
         save_model_path=SAVE_MODEL_PATH,
         tensorboard_log=LOGS_PATH,
+        render_mode="human",
         learning_rate=learning_rate,
         n_steps=n_steps,
         gae_lambda=gae_lambda,
@@ -37,7 +38,7 @@ def main():
         clip_range=clip_range,
         reward_parameters=reward_parameters,
     )
-    agent.train_model(1000)
+    agent.train_model(100000)
     agent.evalute_model(10)
     agent.save_model()
 
