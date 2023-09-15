@@ -24,6 +24,7 @@ class SnakeEnvironment(gym.Env):
         cell_size: int | None = None,
         *,
         render_mode: str | None = None,
+        define_params_mode: bool = False,
         reward_parameters: RewardParametersPack | None = None,
     ) -> None:
         _metadata = {"render_mode": ["human"]}
@@ -51,6 +52,7 @@ class SnakeEnvironment(gym.Env):
             field_size[0] * field_size[1] * (lenght_size - 1)
         )
         self._previous_state = None
+        self._define_params_mode = define_params_mode
 
     def _preprocess(self, observation):
         shape = self.observation_space.shape
@@ -76,75 +78,77 @@ class SnakeEnvironment(gym.Env):
         return dict(length=self._snake_game.snake_length)
 
     def _reward_analize(self) -> float:
-        reward_for_step = -0.01 * self.reward_parameters.step_reward_multiplier
-        reward_for_step /= (
-            self._snake_game.snake_length
-            if self.reward_parameters.multiply_by_length
-            else 1
+        reward_for_step = (
+            -0.01
+            * (1, self.reward_parameters.step_reward_multiplier)[
+                not self._define_params_mode
+            ]
+            / (1, self._snake_game.snake_length**2)[
+                self.reward_parameters.multiply_by_length
+                and not self._define_params_mode
+            ]
         )
         reward_for_eating_fruit = (
             1
-            * self.reward_parameters.food_reward_multiplier
-            * (
-                self.reward_parameters.multiply_by_length
-                * self._snake_game.snake_length
-            )
+            * (1, self.reward_parameters.food_reward_multiplier)[
+                not self._define_params_mode
+            ]
             if self._snake_game.grown
             else 0
         )
         reward_for_stupid_move = (
             -0.1
-            * self.reward_parameters.stupid_reward_multiplier
-            * (
-                self.reward_parameters.multiply_by_length
-                * self._snake_game.snake_length
-            )
+            * (1, self.reward_parameters.stupid_reward_multiplier)[
+                not self._define_params_mode
+            ]
             if self._snake_game.do_stupid
             else 0
         )
         reward_for_death = (
             -1
-            * self.reward_parameters.death_reward_multiplier
-            * (
-                self.reward_parameters.multiply_by_length
-                * self._snake_game.snake_length
-            )
+            * (1, self.reward_parameters.death_reward_multiplier)[
+                not self._define_params_mode
+            ]
             if self._snake_game.game_over
             else 0
         )
         reward_for_victory = (
             float("+inf")
-            * self.reward_parameters.victory_reward_multiplier
-            * (
-                self.reward_parameters.multiply_by_length
-                * self._snake_game.snake_length
-            )
+            * (1, self.reward_parameters.victory_reward_multiplier)[
+                not self._define_params_mode
+            ]
             if self._snake_game.won
             else 0
         )
-        reward_for_max_steps =(
+        reward_for_max_steps = (
             -1
-            * self.reward_parameters.max_steps_reward_multiplier
-            * (
-                self.reward_parameters.multiply_by_length
-                * self._snake_game.snake_length
-            )
+            * (1, self.reward_parameters.max_steps_reward_multiplier)[
+                not self._define_params_mode
+            ]
             if self._do_max_steps(
                 self._field_size, self._snake_game.snake_length, self._snake_game.steps
             )
             else 0
         )
 
-        return sum(
-            (
-                reward_for_step,
-                reward_for_eating_fruit,
-                reward_for_stupid_move,
-                reward_for_death,
-                reward_for_victory,
-                reward_for_max_steps
+        reward = (
+            sum(
+                (
+                    reward_for_step,
+                    reward_for_eating_fruit,
+                    reward_for_stupid_move,
+                    reward_for_death,
+                    reward_for_victory,
+                    reward_for_max_steps,
+                )
             )
+            * (1, self._snake_game.snake_length)[
+                self.reward_parameters.multiply_by_length
+                and not self._define_params_mode
+            ]
         )
+
+        return reward
 
     def step(self, action: int) -> Tuple[NDArray, float, bool, bool, dict]:
         self._snake_game.make_action(action)
@@ -161,9 +165,6 @@ class SnakeEnvironment(gym.Env):
         )
         truncated = False
         info = self._get_info()
-        
-        if self._render_mode == "human":
-            self.render()
 
         return observation, reward, terminated, truncated, info
 
@@ -172,13 +173,11 @@ class SnakeEnvironment(gym.Env):
     ) -> Tuple[NDArray, dict]:
         self._snake_game.reset()
 
-        if self._render_mode == "human":
-            self.render()
-
         return self._get_observation(), self._get_info()
 
     def render(self) -> None:
-        self._snake_game.render()
+        if self._render_mode == "human":
+            self._snake_game.render()
 
     def close(self) -> None:
         self._snake_game.close()

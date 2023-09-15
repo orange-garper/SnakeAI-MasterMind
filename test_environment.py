@@ -1,4 +1,4 @@
-from src.gym_environment import SnakeEnvironment
+from src import SnakeEnvironment
 
 CELL_SIZE, FIELD_SIZE = 30, (32, 18)
 

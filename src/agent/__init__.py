@@ -1,2 +1,2 @@
-from .agent import SnakeAgent
-from .define_hyperparameters import HyperparametersDefining
+from .agent import SnakeAgent # noqa: F401
+from .definding_hyperparameters import HyperparametersDefining # noqa: F401

@@ -1,6 +1,5 @@
 import os
-from src.agent import SnakeAgent
-from src.gym_environment import RewardParametersPack
+from src import SnakeAgent, RewardParametersPack
 
 CELL_SIZE, FIELD_SIZE = 30, (32, 18)
 SAVE_MODEL_PATH = os.path.join("saved_models", "Snake_AI_Model")

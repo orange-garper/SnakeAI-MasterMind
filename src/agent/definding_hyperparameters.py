@@ -64,6 +64,7 @@ class HyperparametersDefining:
         agent = SnakeAgent(
             self._field_size,
             self._cell_size,
+            define_params_mode=True,
             verbose=self._verbose,
             tensorboard_log=self._log_path,
             **model_params,

@@ -27,6 +27,7 @@ class SnakeAgent:
         model: PPO | None = None,
         env=None,
         reward_parameters: RewardParametersPack | None = None,
+        define_params_mode: bool = False,
     ):
         if env is None:
             (
@@ -36,6 +37,7 @@ class SnakeAgent:
                 field_size,
                 cell_size,
                 render_mode,
+                define_params_mode,
                 reward_parameters,
             )
         else:
@@ -63,6 +65,7 @@ class SnakeAgent:
         field_size,
         cell_size,
         render_mode,
+        define_params_mode,
         reward_parameters,
     ):
         environment = VecFrameStack(
@@ -87,6 +90,7 @@ class SnakeAgent:
                             field_size,
                             cell_size,
                             render_mode=render_mode,
+                            define_params_mode=define_params_mode,
                             reward_parameters=reward_parameters,
                         )
                     )

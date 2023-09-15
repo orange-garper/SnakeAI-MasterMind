@@ -1,4 +1,4 @@
-from src.snake_game import SnakeGame
+from src import SnakeGame
 
 CELL_SIZE, FIELD_SIZE = 30, (32, 18)
 
