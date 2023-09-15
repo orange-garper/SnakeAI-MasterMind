@@ -86,7 +86,7 @@ class SnakeAgent:
                         SnakeEnvironment(
                             field_size,
                             cell_size,
-                            render_mode="human",
+                            render_mode=render_mode,
                             reward_parameters=reward_parameters,
                         )
                     )
