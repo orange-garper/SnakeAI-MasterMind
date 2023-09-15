@@ -1,4 +1,4 @@
-import os, json
+import os, json   # noqa: E401
 from src import HyperparametersDefining
 
 CELL_SIZE, FIELD_SIZE = 30, (32, 18)
