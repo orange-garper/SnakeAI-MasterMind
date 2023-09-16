@@ -10,7 +10,7 @@ if __name__ == "__main__":
         FIELD_SIZE,
         CELL_SIZE,
         log_path=LOGS_PATH,
-        total_timesteps=1,
+        total_timesteps=10000,
         n_jobs=1,
         n_trials=1,
     )

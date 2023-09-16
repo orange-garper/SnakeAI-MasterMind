@@ -24,6 +24,7 @@ class SnakeEnvironment(gym.Env):
         cell_size: int | None = None,
         *,
         render_mode: str | None = None,
+        render_learn_mode: bool = False,
         define_params_mode: bool = False,
         reward_parameters: RewardParametersPack | None = None,
     ) -> None:
@@ -46,6 +47,7 @@ class SnakeEnvironment(gym.Env):
  Available render modes\
  : {', '.join(_metadata['render_mode'])}"
         self._render_mode = render_mode
+        self._render_learn_mode = render_learn_mode
 
         self.reward_parameters = reward_parameters or RewardParametersPack()
         self._do_max_steps = lambda field_size, lenght_size, steps: steps > (
@@ -67,7 +69,8 @@ class SnakeEnvironment(gym.Env):
         grey_state = self._preprocess(current_state)
 
         if self._previous_state is not None:
-            state_delta = grey_state - self._previous_state
+            state_delta = grey_state \
+# - self._previous_state
         else:
             state_delta = grey_state
 
@@ -166,12 +169,18 @@ class SnakeEnvironment(gym.Env):
         truncated = False
         info = self._get_info()
 
+        if self._render_learn_mode and self._render_mode == "human":
+            self.render()
+
         return observation, reward, terminated, truncated, info
 
     def reset(
         self, *, seed: int | None = None, options: dict[str, Any] | None = None
     ) -> Tuple[NDArray, dict]:
         self._snake_game.reset()
+
+        if self._render_learn_mode and self._render_mode == "human":
+            self.render()
 
         return self._get_observation(), self._get_info()
 

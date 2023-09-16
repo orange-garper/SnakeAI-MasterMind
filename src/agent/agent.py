@@ -15,6 +15,7 @@ class SnakeAgent:
         save_model_path: str | None = None,
         tensorboard_log=None,
         render_mode: str | None = "human",
+        render_learn_mode: bool = False,
         verbose: int = 1,
         learning_rate=0.0005,
         n_steps=256,
@@ -37,6 +38,7 @@ class SnakeAgent:
                 field_size,
                 cell_size,
                 render_mode,
+                render_learn_mode,
                 define_params_mode,
                 reward_parameters,
             )
@@ -65,6 +67,7 @@ class SnakeAgent:
         field_size,
         cell_size,
         render_mode,
+        render_learn_mode,
         define_params_mode,
         reward_parameters,
     ):
@@ -74,7 +77,8 @@ class SnakeAgent:
                     lambda: SnakeEnvironment(
                         field_size,
                         cell_size,
-                        render_mode=None,
+                        render_mode=render_mode,
+                        render_learn_mode=render_learn_mode,
                         reward_parameters=reward_parameters,
                     )
                 ]
@@ -132,7 +136,12 @@ class SnakeAgent:
         return model
 
     def train_model(self, total_timesteps, callback=None):
-        self._model.learn(total_timesteps=total_timesteps, callback=callback)
+        self._model.learn(
+            total_timesteps=self._model.n_steps
+            * (total_timesteps // self._model.n_steps + 1),
+            callback=callback,
+            progress_bar=True,
+        )
 
     @classmethod
     def load_model(

@@ -98,7 +98,8 @@ The current player mode is {player_mode}."
         self._fruit.render()
         self._snake.render()
         self.window.blit(self._canvas, self._canvas.get_rect())
-        pygame.display.update()
+        pygame.event.get()
+        pygame.display.flip()
         self.clock.tick(self._metadata["render_fps"])
 
     def make_action(self, action):

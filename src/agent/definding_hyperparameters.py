@@ -11,6 +11,8 @@ class HyperparametersDefining:
         cell_size: int,
         *,
         log_path: str = None,
+        render_mode: str = None,
+        render_learn_mode: bool = False,
         total_timesteps: int = 10000,
         n_trials: int = 100,
         n_jobs: int = 1,
@@ -20,9 +22,18 @@ class HyperparametersDefining:
         self._field_size = field_size
         self._cell_size = cell_size
         self._log_path = log_path
+        self._render_mode = render_mode
+        self._render_learn_mode = render_learn_mode
+
+        assert (
+            not self._render_learn_mode and n_jobs <= 1
+        ), "The display mode during training does not work well with more than two workers.\
+Therefore, we decided to cut this function).\
+Well, change either the number of employees by one, or turn off the display mode.\
+('render_learn_model' = False, 'n_jobs' = 4; 'render_learn_model' = True, 'n_jobs' = 1)"
+        self._n_jobs = n_jobs
         self._total_timesteps = total_timesteps
         self._n_trials = n_trials
-        self._n_jobs = n_jobs
         self._n_eval_episodes = n_eval_episodes
         self._verbose = verbose
 
@@ -64,6 +75,8 @@ class HyperparametersDefining:
         agent = SnakeAgent(
             self._field_size,
             self._cell_size,
+            render_mode=self._render_mode,
+            render_learn_mode=self._render_learn_mode,
             define_params_mode=True,
             verbose=self._verbose,
             tensorboard_log=self._log_path,

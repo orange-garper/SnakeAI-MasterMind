@@ -1,4 +1,4 @@
-import unittest, pygame
+import unittest, pygame  # noqa: E401
 from pygame.math import Vector2
 from src import AIsController, HumansController
 
